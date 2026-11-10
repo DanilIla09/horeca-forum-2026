@@ -19,7 +19,7 @@
 Открыть `index.html` в браузере или `python3 -m http.server 8080` в папке.
 
 ## Деплой
-Любой статический хостинг: GitHub Pages, Netlify, Cloudflare Pages, nginx. Загрузить папку целиком (index.html, css, js, data, assets). QR-код из приглашения ведёт на корневой URL.
+Публичный адрес: https://danilila09.github.io/horeca-forum-2026/ (GitHub Pages, репозиторий DanilIla09/horeca-forum-2026, ветка main). Обновить сайт: закоммитить правки и `bash deploy_pages.sh` (или `git push`), Pages пересоберётся за 1–2 минуты. QR-код из приглашения ведёт на этот URL. Любой другой статический хостинг тоже подходит: загрузить папку целиком.
 
 ## Публикация по ссылке (claude.ai)
 `python3 build_artifact.py` собирает `dist/artifact.html` (тело страницы + встроенные CSS/JS/данные). Опубликовано: https://claude.ai/artifact/XKkeSDFn2ny7aDqQNn1rk3 (приватно, доступ раздаётся через Share на странице). Внутри артефакта iframe карты запрещён, поэтому там рисуется стилизованная карта-плейсхолдер с кнопками маршрута; на обычном хостинге показывается живая карта Google.
