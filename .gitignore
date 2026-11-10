@@ -1,0 +1,5 @@
+# не публикуем: пакет для дизайна с исходниками брендбука и сборку для claude.ai
+for-claude-design/
+dist/
+.DS_Store
+for-claude-design-logos.zip

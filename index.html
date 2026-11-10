@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Coca-Cola HoReCa Forum 2026</title>
+  <meta name="description" content="Coca-Cola HoReCa Forum 2026: 9 декабря, 10:00–16:00, Swiss Hotel, Алматы. Программа, спикеры, ведущий, меню, маршрут.">
+  <meta name="theme-color" content="#2E060C">
+  <meta property="og:title" content="Coca-Cola HoReCa Forum 2026">
+  <meta property="og:description" content="Театр: fusion современности и классики · 9 декабря 2026 · Swiss Hotel, Алматы">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="assets/logo/favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="assets/logo/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<!--PAGE-START-->
+  <!-- Занавес на открытии -->
+  <div class="curtain" id="curtain" aria-hidden="true">
+    <div class="curtain__rod"></div>
+    <div class="curtain__panel curtain__panel--left"><span class="curtain__edge"></span></div>
+    <div class="curtain__panel curtain__panel--right"><span class="curtain__edge"></span></div>
+    <div class="curtain__valance"></div>
+  </div>
+
+  <header class="nav" id="nav">
+    <div class="nav__inner">
+      <a class="nav__brand" href="#home" data-nav aria-label="Coca-Cola HoReCa Forum 2026 — на главную">
+        <img src="assets/logo/horeca-forum-2026-white-h.png" alt="" width="1100" height="314">
+      </a>
+      <nav class="nav__list" id="navlist" aria-label="Разделы">
+        <a href="#home" data-nav>Главная</a>
+        <a href="#about" data-nav>О форуме</a>
+        <a href="#program" data-nav>Программа</a>
+        <a href="#speakers" data-nav>Спикеры</a>
+        <a href="#host" data-nav>Ведущий</a>
+        <a href="#menu" data-nav>Меню</a>
+        <a href="#venue" data-nav>Локация</a>
+        <p class="nav__meta" id="navMeta"></p>
+      </nav>
+      <button class="nav__burger" id="burger" aria-label="Открыть меню" aria-expanded="false" aria-controls="navlist">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- 1. Главная -->
+    <section class="hero" id="home">
+      <div class="wing wing--l" aria-hidden="true"></div>
+      <div class="wing wing--r" aria-hidden="true"></div>
+      <canvas class="hero__dust" id="dust" aria-hidden="true"></canvas>
+      <div class="hero__inner">
+        <p class="eyebrow eyebrow--gold reveal" data-field="season"></p>
+        <img class="hero__logo reveal" src="assets/logo/horeca-forum-2026-white.png" alt="Coca-Cola HoReCa Forum 2026" width="1200" height="1085" fetchpriority="high">
+        <div class="divider divider--light reveal" aria-hidden="true"><i></i><b>◆</b><i></i></div>
+        <h1 class="hero__title reveal" id="heroTitle"></h1>
+        <dl class="facts reveal">
+          <div class="facts__cell"><dt>Дата</dt><dd data-field="dateText"></dd></div>
+          <div class="facts__cell"><dt>Время</dt><dd data-field="timeText"></dd></div>
+          <div class="facts__cell"><dt>Место</dt><dd data-field="venueShort"></dd></div>
+        </dl>
+        <div class="countdown reveal" id="countdown" aria-live="polite" aria-atomic="true">
+          <p class="eyebrow countdown__eyebrow" id="countdownLabel">До поднятия занавеса</p>
+          <div class="countdown__grid">
+            <div class="countdown__cell"><b data-cd="d">00</b><span>дней</span></div>
+            <div class="countdown__cell"><b data-cd="h">00</b><span>часов</span></div>
+            <div class="countdown__cell"><b data-cd="m">00</b><span>минут</span></div>
+            <div class="countdown__cell"><b data-cd="s">00</b><span>секунд</span></div>
+          </div>
+          <p class="countdown__note" id="countdownNote">по времени Алматы (UTC+5)</p>
+        </div>
+        <a class="btn btn--outline reveal" href="#program" data-nav>Смотреть программу</a>
+      </div>
+    </section>
+
+    <!-- 2. О форуме -->
+    <section class="section section--ivory" id="about">
+      <div class="container about">
+        <div class="about__head reveal">
+          <p class="eyebrow eyebrow--text" id="aboutEyebrow"></p>
+          <h2 class="h2">О форуме</h2>
+          <div class="divider divider--left" aria-hidden="true"><i></i><b>◆</b></div>
+        </div>
+        <div class="about__body reveal">
+          <p class="lead" id="aboutLead"></p>
+          <div class="about__text" id="aboutText"></div>
+        </div>
+        <ol class="pillars reveal reveal--stagger" id="pillars"></ol>
+      </div>
+    </section>
+
+    <!-- 3. Программа -->
+    <section class="section section--ivory-deep" id="program">
+      <div class="container container--narrow">
+        <header class="section__head reveal">
+          <p class="eyebrow eyebrow--text" id="programEyebrow"></p>
+          <h2 class="h2">Программа форума</h2>
+          <p class="section__sub"><span data-field="dateText"></span> · <span data-field="timeText"></span></p>
+        </header>
+        <ol class="timeline reveal reveal--stagger" id="timeline"></ol>
+      </div>
+    </section>
+
+    <!-- 4. Спикеры -->
+    <section class="section section--bordeaux" id="speakers">
+      <div class="container">
+        <header class="section__head reveal">
+          <p class="eyebrow eyebrow--gold" id="speakersEyebrow"></p>
+          <h2 class="h2 h2--light">Спикеры</h2>
+          <p class="section__sub section__sub--light" id="speakersSub"></p>
+        </header>
+        <div class="speakers reveal reveal--stagger" id="speakersGrid"></div>
+      </div>
+    </section>
+
+    <!-- 5. Ведущий -->
+    <section class="section section--ivory" id="host">
+      <div class="container">
+        <article class="poster reveal" id="hostCard"></article>
+      </div>
+    </section>
+
+    <!-- 6. Меню -->
+    <section class="section section--ivory-deep" id="menu">
+      <div class="container container--menu">
+        <article class="menucard reveal">
+          <header class="section__head">
+            <p class="eyebrow eyebrow--text" id="menuEyebrow"></p>
+            <h2 class="h2">Меню</h2>
+            <div class="divider divider--center" aria-hidden="true"><i></i><b>◆</b><i></i></div>
+          </header>
+          <div class="menucard__grid reveal--stagger" id="menuBody"></div>
+          <p class="menucard__note" id="menuNote"></p>
+        </article>
+      </div>
+    </section>
+
+    <!-- 7. Место проведения -->
+    <section class="section section--bordeaux" id="venue">
+      <div class="container venue">
+        <div class="venue__info reveal">
+          <p class="eyebrow eyebrow--gold" id="venueEyebrow"></p>
+          <h2 class="h2 h2--light h2--left">Место проведения</h2>
+          <dl class="venue__rows">
+            <div><dt>Площадка</dt><dd class="venue__name" data-field="venue.name"></dd></div>
+            <div><dt>Адрес</dt><dd data-field="venue.address"></dd></div>
+            <div><dt>Дата и время</dt><dd><span data-field="dateLong"></span> · <span data-field="timeText"></span></dd></div>
+          </dl>
+          <p class="eyebrow eyebrow--gold venue__route">Построить маршрут</p>
+          <div class="venue__actions">
+            <a class="btn btn--gold" id="route2gis" href="#" target="_blank" rel="noopener">2GIS</a>
+            <a class="btn btn--outline" id="routeGoogle" href="#" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+        <div class="venue__map reveal" id="venueMap"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <img class="footer__logo" src="assets/logo/horeca-forum-2026-white-h.png" alt="Coca-Cola HoReCa Forum 2026" width="1100" height="314" loading="lazy">
+      <div class="footer__org">
+        <span class="eyebrow eyebrow--gold" id="orgLabel"></span>
+        <span class="footer__chip"><img src="assets/logo/cci-kazakhstan.png" alt="CCI Kazakhstan" width="600" height="400" loading="lazy"></span>
+      </div>
+    </div>
+    <div class="container"><p class="footer__copy" id="copyright"></p></div>
+  </footer>
+
+  <!-- Модалка спикера -->
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalName" hidden>
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__card" role="document">
+      <button class="modal__close" data-close aria-label="Закрыть">×</button>
+      <div class="modal__photo" id="modalPhoto"></div>
+      <div class="modal__body">
+        <p class="eyebrow eyebrow--text">Спикер</p>
+        <h3 class="modal__name" id="modalName"></h3>
+        <p class="modal__role" id="modalRole"></p>
+        <p class="eyebrow eyebrow--company" id="modalCompany"></p>
+        <hr class="rule">
+        <p class="eyebrow eyebrow--red">Тема выступления</p>
+        <p class="modal__topic" id="modalTopic"></p>
+        <p class="eyebrow eyebrow--muted" id="modalWhen"></p>
+        <hr class="rule">
+        <p class="modal__bio" id="modalBio"></p>
+      </div>
+    </div>
+  </div>
+<!--PAGE-END-->
+  <script src="data/event.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
