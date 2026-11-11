@@ -11,9 +11,8 @@
   <meta property="og:type" content="website">
   <link rel="icon" href="assets/logo/favicon.png" type="image/png">
   <link rel="apple-touch-icon" href="assets/logo/favicon.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="preload" href="assets/fonts/helvetica-regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/helvetica-bold.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -82,7 +81,7 @@
       <div class="container about">
         <div class="about__head reveal">
           <p class="eyebrow eyebrow--text" id="aboutEyebrow"></p>
-          <h2 class="h2">О форуме</h2>
+          <h2 class="h2">О <b>форуме</b></h2>
           <div class="divider divider--left" aria-hidden="true"><i></i><b>◆</b></div>
         </div>
         <div class="about__body reveal">
@@ -98,7 +97,7 @@
       <div class="container container--narrow">
         <header class="section__head reveal">
           <p class="eyebrow eyebrow--text" id="programEyebrow"></p>
-          <h2 class="h2">Программа форума</h2>
+          <h2 class="h2"><b>Программа</b> форума</h2>
           <p class="section__sub"><span data-field="dateText"></span> · <span data-field="timeText"></span></p>
         </header>
         <ol class="timeline reveal reveal--stagger" id="timeline"></ol>
@@ -110,7 +109,7 @@
       <div class="container">
         <header class="section__head reveal">
           <p class="eyebrow eyebrow--gold" id="speakersEyebrow"></p>
-          <h2 class="h2 h2--light">Спикеры</h2>
+          <h2 class="h2 h2--light"><b>Спикеры</b></h2>
           <p class="section__sub section__sub--light" id="speakersSub"></p>
         </header>
         <div class="speakers reveal reveal--stagger" id="speakersGrid"></div>
@@ -130,7 +129,7 @@
         <article class="menucard reveal">
           <header class="section__head">
             <p class="eyebrow eyebrow--text" id="menuEyebrow"></p>
-            <h2 class="h2">Меню</h2>
+            <h2 class="h2"><b>Меню</b></h2>
             <div class="divider divider--center" aria-hidden="true"><i></i><b>◆</b><i></i></div>
           </header>
           <div class="menucard__grid reveal--stagger" id="menuBody"></div>
@@ -144,7 +143,7 @@
       <div class="container venue">
         <div class="venue__info reveal">
           <p class="eyebrow eyebrow--gold" id="venueEyebrow"></p>
-          <h2 class="h2 h2--light h2--left">Место проведения</h2>
+          <h2 class="h2 h2--light h2--left"><b>Место</b> проведения</h2>
           <dl class="venue__rows">
             <div><dt>Площадка</dt><dd class="venue__name" data-field="venue.name"></dd></div>
             <div><dt>Адрес</dt><dd data-field="venue.address"></dd></div>
