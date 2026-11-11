@@ -17,7 +17,7 @@
   $("#navMeta").textContent = [D.dateText, D.timeText, D.venueShort].filter(Boolean).join(" · ");
   $("#aboutEyebrow").textContent = D.about.eyebrow; $("#programEyebrow").textContent = D.program.eyebrow;
   $("#speakersEyebrow").textContent = D.speakers.eyebrow; $("#speakersSub").textContent = D.speakers.sub;
-  $("#menuEyebrow").textContent = D.menu.eyebrow; $("#menuNote").textContent = D.menu.note;
+  $("#menuEyebrow").textContent = D.menu.eyebrow; $("#menuTeaser").textContent = D.menu.teaser || "";
   $("#venueEyebrow").textContent = D.venue.eyebrow; $("#orgLabel").textContent = D.footer.organizerLabel; $("#copyright").textContent = D.footer.copyright;
 
   /* ---- Заголовок hero: слова появляются по очереди, {слово} — золотым курсивом ---- */
@@ -100,7 +100,7 @@
   var tl = $("#timeline");
   (D.program.items || []).forEach(function (p, i) {
     var li = doc.createElement("li"); li.className = "tl" + (p.isBreak ? " tl--break" : ""); li.style.setProperty("--i", i);
-    li.innerHTML = '<time class="tl__time">' + esc(p.time) + '</time><span class="tl__dot" aria-hidden="true"></span>' +
+    li.innerHTML = '<time class="tl__time"><b>' + esc(p.time) + '</b>' + (p.end ? '<span>–' + esc(p.end) + '</span>' : '') + '</time><span class="tl__dot" aria-hidden="true"></span>' +
       '<div class="tl__body"><p class="eyebrow ' + (p.isBreak ? "eyebrow--badge" : "eyebrow--text") + '">' + esc(p.label) + '</p>' +
       '<h3 class="h3">' + esc(p.title) + '</h3>' + (p.meta ? '<p class="tl__meta">' + esc(p.meta) + '</p>' : "") + "</div>";
     tl.appendChild(li);
@@ -111,12 +111,13 @@
   var arch = function (sp, cls, caption) {
     return sp.photo
       ? '<div class="' + cls + '"><img src="' + esc(sp.photo) + '" alt="' + esc(sp.name) + '" loading="lazy"></div>'
-      : '<div class="' + cls + ' arch--empty"><b>' + esc(initials(sp.name)) + '</b><span class="eyebrow eyebrow--muted">' + esc(caption || "фото") + "</span></div>";
+      : '<div class="' + cls + ' arch--empty"><b>' + esc(sp.initials || initials(sp.name)) + '</b><span class="eyebrow eyebrow--muted">' + esc(caption || "фото") + "</span></div>";
   };
   (D.speakers.items || []).forEach(function (sp, i) {
     var b = doc.createElement("button"); b.type = "button"; b.className = "speaker"; b.style.setProperty("--i", i);
-    b.innerHTML = '<div class="speaker__top">' + arch(sp, "arch") + '<div class="speaker__id"><h3 class="h3">' + esc(sp.name) + '</h3><p class="speaker__role">' + esc(sp.role) + '</p><p class="eyebrow eyebrow--company">' + esc(sp.company) + "</p></div></div>" +
-      '<div class="speaker__topic"><p class="eyebrow eyebrow--red">Тема</p><p>' + esc(sp.topic) + '</p></div><span class="speaker__more">Подробнее →</span><span class="speaker__glare" aria-hidden="true"></span>';
+    b.innerHTML = '<div class="speaker__top">' + arch(sp, "arch") + '<div class="speaker__id"><h3 class="h3">' + esc(sp.name) + '</h3>' +
+      (sp.role ? '<p class="speaker__role">' + esc(sp.role) + '</p>' : '') + (sp.company ? '<p class="eyebrow eyebrow--company">' + esc(sp.company) + '</p>' : '') + '</div></div>' +
+      '<div class="speaker__topic"><p class="eyebrow eyebrow--red">' + (sp.time ? esc(sp.time) : 'Тема') + '</p><p' + (sp.topic ? '' : ' class="speaker__note"') + '>' + esc(sp.topic || sp.topicNote || 'Тема уточняется') + '</p></div><span class="speaker__more">Подробнее →</span><span class="speaker__glare" aria-hidden="true"></span>';
     b.addEventListener("click", function () { openModal(sp); });
     if (finePointer && !reduced) tilt(b);
     grid.appendChild(b);
@@ -137,7 +138,8 @@
     lastFocus = doc.activeElement;
     $("#modalPhoto").innerHTML = arch(sp, "arch arch--lg");
     $("#modalName").textContent = sp.name || ""; $("#modalRole").textContent = sp.role || ""; $("#modalCompany").textContent = sp.company || "";
-    $("#modalTopic").textContent = sp.topic || ""; $("#modalWhen").textContent = [sp.time, sp.stage].filter(Boolean).join(" · ");
+    $("#modalRole").hidden = !sp.role; $("#modalCompany").hidden = !sp.company;
+    $("#modalTopic").textContent = sp.topic || sp.topicNote || "Тема уточняется"; $("#modalWhen").textContent = [sp.time, sp.stage].filter(Boolean).join(" · ");
     $("#modalBio").textContent = sp.bio || "";
     modal.hidden = false; doc.body.classList.add("modal-open");
     requestAnimationFrame(function () { modal.classList.add("is-open"); $(".modal__close", modal).focus(); });
@@ -153,18 +155,20 @@
   var H = D.host || {};
   $("#hostCard").innerHTML = '<div class="poster__frame" aria-hidden="true"></div>' + arch(H, "arch arch--poster", "фото ведущего") +
     '<div class="poster__body"><p class="eyebrow eyebrow--gold">' + esc(H.eyebrow) + '</p><p class="poster__kicker">' + esc(H.kicker) + '</p>' +
-    '<h2 class="poster__name" id="hostName">' + esc(H.name).replace(" ", "<br>") + '</h2><p class="poster__text">' + esc(H.description) + '</p>' +
+    '<h2 class="poster__name" id="hostName">' + esc(H.name).replace(" ", "<br>") + '</h2>' + (H.role ? '<p class="poster__role">' + esc(H.role) + '</p>' : '') +
+    '<div class="poster__text">' + [].concat(H.description || []).map(function (t) { return '<p>' + esc(t) + '</p>'; }).join('') + '</div>' +
     '<p class="eyebrow eyebrow--gold">' + esc(H.footnote) + "</p></div>";
 
-  /* ---- Меню ---- */
-  var mb = $("#menuBody");
-  (D.menu.categories || []).forEach(function (c, i) {
-    var sec = doc.createElement("section"); sec.className = "menucat"; sec.style.setProperty("--i", i);
-    sec.innerHTML = '<h3 class="menucat__title">' + esc(c.category) + "</h3><ul>" + (c.items || []).map(function (it) {
-      return "<li><b>" + esc(it.name) + "</b>" + (it.desc ? "<span>" + esc(it.desc) + "</span>" : "") + "</li>";
-    }).join("") + "</ul>";
-    mb.appendChild(sec);
-  });
+  /* ---- Схема проезда: блок показывается, когда в данных указан файл (venue.scheme) ---- */
+  (function () {
+    var V = D.venue || {}, block = $("#schemeBlock"), box = $("#lightbox");
+    if (!V.scheme || !block) return;
+    $("#schemeImg").src = V.scheme; $("#lightboxImg").src = V.scheme; $("#schemeCaption").textContent = V.schemeCaption || ""; block.hidden = false;
+    var close = function () { box.hidden = true; doc.body.classList.remove("modal-open"); };
+    $("#schemeOpen").addEventListener("click", function () { box.hidden = false; doc.body.classList.add("modal-open"); $("#lightboxClose").focus(); });
+    box.addEventListener("click", close);
+    doc.addEventListener("keydown", function (e) { if (e.key === "Escape" && !box.hidden) close(); });
+  })();
 
   /* ---- Локация: карта ---- */
   (function () {
@@ -181,45 +185,36 @@
     }
   })();
 
-  /* ---- Прожектор за курсором (десктоп) и параллакс кулис ---- */
+  /* ---- Фон первого экрана. Всё движется только через transform/opacity: видеокарта двигает готовые слои,
+          страница ничего не перерисовывает. Когда экран не виден, анимации стоят. ---- */
   var hero = $("#home");
-  if (finePointer && !reduced) {
-    hero.addEventListener("pointermove", function (e) {
-      var r = hero.getBoundingClientRect();
-      hero.style.setProperty("--mx", ((e.clientX - r.left) / r.width * 100).toFixed(1) + "%");
-      hero.style.setProperty("--my", ((e.clientY - r.top) / r.height * 100).toFixed(1) + "%");
-    });
-  }
-  if (!reduced) {
-    var wings = $$(".wing"), raf = 0;
-    window.addEventListener("scroll", function () {
-      if (raf) return;
-      raf = requestAnimationFrame(function () { raf = 0; var y = Math.min(window.scrollY, 900); wings.forEach(function (w) { w.style.transform = "translateY(" + (y * .18).toFixed(1) + "px)"; }); });
-    }, { passive: true });
-  }
-
-  /* ---- Золотая пыль в hero (canvas) ---- */
   (function () {
-    var c = $("#dust"); if (!c || reduced) { if (c) c.remove(); return; }
-    var ctx = c.getContext("2d"), P = [], W, Hh, dpr = Math.min(window.devicePixelRatio || 1, 2), running = true;
-    function size() { var r = hero.getBoundingClientRect(); W = r.width; Hh = r.height; c.width = W * dpr; c.height = Hh * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); }
-    function spawn() { return { x: Math.random() * W, y: Math.random() * Hh, r: .6 + Math.random() * 1.8, vx: (Math.random() - .5) * .12, vy: -.06 - Math.random() * .16, a: Math.random() * Math.PI * 2, s: .004 + Math.random() * .01 }; }
-    size(); var n = Math.round(Math.min(90, W * Hh / 14000)); for (var i = 0; i < n; i++) P.push(spawn());
-    window.addEventListener("resize", size);
-    function frame() {
-      if (!running) return;
-      ctx.clearRect(0, 0, W, Hh);
-      for (var i = 0; i < P.length; i++) {
-        var p = P[i]; p.x += p.vx; p.y += p.vy; p.a += p.s;
-        if (p.y < -4 || p.x < -4 || p.x > W + 4) { P[i] = spawn(); P[i].y = Hh + 4; continue; }
-        var al = .25 + Math.sin(p.a) * .25;
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fillStyle = "rgba(230,199,110," + al.toFixed(3) + ")"; ctx.fill();
-      }
-      requestAnimationFrame(frame);
+    if (reduced) return;
+    // прожектор за курсором (десктоп)
+    var spot = $("#spot"), sx = 0, sy = 0, spotRaf = 0;
+    if (finePointer && spot) hero.addEventListener("pointermove", function (e) {
+      var r = hero.getBoundingClientRect(); sx = e.clientX - r.left; sy = e.clientY - r.top;
+      if (!spotRaf) spotRaf = requestAnimationFrame(function () { spotRaf = 0; spot.style.transform = "translate3d(" + sx.toFixed(0) + "px," + sy.toFixed(0) + "px,0)"; });
+    }, { passive: true });
+    // параллакс кулис
+    var wings = $$(".wing"), raf = 0, lastY = -1;
+    window.addEventListener("scroll", function () {
+      if (raf || window.scrollY > 1000) return;
+      raf = requestAnimationFrame(function () { raf = 0; var y = Math.min(window.scrollY, 900); if (y === lastY) return; lastY = y; wings.forEach(function (w) { w.style.transform = "translate3d(0," + (y * .18).toFixed(1) + "px,0)"; }); });
+    }, { passive: true });
+    // золотая пыль: несколько точек на CSS-анимации вместо canvas на весь экран
+    var dust = $("#dust"), n = window.innerWidth < 640 ? 12 : 22, frag = doc.createDocumentFragment();
+    for (var i = 0; i < n; i++) {
+      var m = doc.createElement("span"), d = 9 + Math.random() * 12; m.className = "mote";
+      m.style.cssText = "--x:" + (Math.random() * 100).toFixed(1) + "%;--y:" + (15 + Math.random() * 85).toFixed(1) + "%;--s:" + (1.5 + Math.random() * 2.5).toFixed(1) + "px;--o:" + (.25 + Math.random() * .45).toFixed(2) +
+        ";--dx:" + ((Math.random() - .5) * 60).toFixed(0) + "px;--dy:" + (-60 - Math.random() * 140).toFixed(0) + "px;--d:" + d.toFixed(1) + "s;--delay:" + (-Math.random() * d).toFixed(1) + "s";
+      frag.appendChild(m);
     }
-    frame();
-    if ("IntersectionObserver" in window) new IntersectionObserver(function (es) { var v = es[0].isIntersecting && !doc.hidden; if (v && !running) { running = true; frame(); } else if (!v) running = false; }).observe(hero);
-    doc.addEventListener("visibilitychange", function () { if (doc.hidden) running = false; else if (!running) { running = true; frame(); } });
+    dust.appendChild(frag);
+    // пауза фоновых анимаций, когда первый экран не виден или вкладка скрыта
+    var seenHero = true, setAway = function () { hero.classList.toggle("is-away", !seenHero || doc.hidden); };
+    if ("IntersectionObserver" in window) new IntersectionObserver(function (es) { seenHero = es[0].isIntersecting; setAway(); }).observe(hero);
+    doc.addEventListener("visibilitychange", setAway);
   })();
 
   /* ---- Появление при прокрутке (+ страховка: всё видно через 2,5 с). Первый экран ведёт вступление. ---- */
@@ -258,10 +253,84 @@
     }
 
     /* ---------- Занавес: складки ткани на canvas ---------- */
-    var ctx = cv.getContext("2d"), cw = 0, ch = 0;
-    function sizeCurtain() { var d = Math.min(window.devicePixelRatio || 1, 2); cw = window.innerWidth; ch = window.innerHeight; cv.width = cw * d; cv.height = ch * d; ctx.setTransform(d, 0, 0, d, 0, 0); }
+    /* Основной путь — фрагментный шейдер: цвет каждого пикселя считается по формуле ткани, поэтому нет
+       ни ступенек, ни размытия, а нагрузка ложится на видеокарту. Если WebGL недоступен — 2D-отрисовка ниже. */
+    var ctx = null, gl = null, glU = null, cw = 0, ch = 0, cdpr = 1;
+    var FRAG = [
+      "precision highp float;",
+      "uniform vec2 uRes; uniform float uT, uNow, uN, uWing, uDpr;",
+      "const float DUR = 1.9; const float LAG = .34;",
+      "float lead(float yn) {",                       // ведущая кромка: низ отстаёт от верха, потом затухающе качается
+      "  float lag = LAG * pow(yn, 1.4);",
+      "  float k = clamp((uT - lag) / DUR, 0., 1.);",
+      "  float e = k < .5 ? 4. * k * k * k : 1. - pow(-2. * k + 2., 3.) / 2.;",
+      "  float after = uT - lag - DUR;",
+      "  float sway = after > 0. ? sin(after * 6.5) * exp(-after * 2.6) * 12. * yn : 0.;",
+      "  float idle = uT <= 0. ? sin(uNow * 1.1 + yn * 9.) * 1.5 * yn : 0.;",
+      "  float half_ = uRes.x * .5 + 1.;",
+      "  return half_ + (uWing - half_) * e + sway + idle;",
+      "}",
+      "vec3 fold(float u) {",                         // объём одной складки: тень — свет — тень
+      "  vec3 dark = vec3(.31, .02, .065), mid = vec3(.64, .05, .145), hi = vec3(.85, .15, .25);",
+      "  float a = 1. - abs(u - .5) * 2.;",           // 0 у краёв складки, 1 в гребне
+      "  vec3 c = mix(dark, mid, smoothstep(0., .55, a));",
+      "  return mix(c, hi, smoothstep(.5, 1., a));",
+      "}",
+      "void main() {",
+      "  vec2 p = gl_FragCoord.xy / uDpr; float y = uRes.y - p.y, yn = clamp(y / uRes.y, 0., 1.);",
+      "  float x = p.x; if (x > uRes.x * .5) x = uRes.x - x;",
+      "  float xl = lead(yn), half_ = uRes.x * .5 + 1., minW = uWing / uN;",
+      "  float d = x - xl;",                          // >0 — сцена, <0 — ткань
+      "  float shadow = .42 * (1. - clamp((d - 3.) / 90., 0., 1.)) * step(0., d);",
+      // обратная задача: какой складке принадлежит пиксель (часть складок сжимается равномерно, часть сгребается кромкой)
+      "  float jA = x * uN / (.45 * xl + .55 * half_);",
+      "  float jB = (x - .55 * (xl - uN * minW)) / (.45 * xl / uN + .55 * minW);",
+      "  float jf = max(jA, jB);",
+      "  vec3 c = fold(fract(jf));",
+      "  float v = yn < .14 ? .38 * (1. - yn / .14) : (yn > .62 ? .5 * (yn - .62) / .38 : 0.);",
+      "  c *= 1. - v;",                               // тень под карнизом и к полу
+      "  float hem = uRes.y - y;",                    // золотая отделка подола
+      "  c = mix(c, vec3(.79, .64, .15), .9 * smoothstep(8.5, 7.5, hem) * smoothstep(3.5, 4.5, hem));",
+      "  c = mix(c, vec3(.9, .78, .43), .5 * smoothstep(13.5, 13., hem) * smoothstep(11.5, 12., hem));",
+      "  float tw = uRes.x < 640. ? 2. : 3.;",        // золотая кайма по кромке
+      "  vec3 gold = mix(vec3(.95, .86, .58), vec3(.49, .38, .06), yn); gold = mix(gold, vec3(.79, .64, .15), 1. - abs(yn - .5) * 2.);",
+      "  float trim = smoothstep(tw + .75, tw - .25, abs(d));",
+      "  float cloth = smoothstep(.75, -.75, d);",    // сглаженный край ткани
+      "  vec4 col = vec4(c * cloth, cloth);",
+      "  col = mix(vec4(0., 0., 0., shadow), col, cloth);",
+      "  col = mix(col, vec4(gold, 1.), trim);",
+      "  gl_FragColor = col;",
+      "}"
+    ].join("\n");
+    function initGL() {
+      try {
+        var g = cv.getContext("webgl", { alpha: true, premultipliedAlpha: true, antialias: false, powerPreference: "low-power" });
+        if (!g) return false;
+        var sh = function (type, src) { var s = g.createShader(type); g.shaderSource(s, src); g.compileShader(s); if (!g.getShaderParameter(s, g.COMPILE_STATUS)) throw new Error(g.getShaderInfoLog(s)); return s; };
+        var prog = g.createProgram();
+        g.attachShader(prog, sh(g.VERTEX_SHADER, "attribute vec2 a; void main() { gl_Position = vec4(a, 0., 1.); }"));
+        g.attachShader(prog, sh(g.FRAGMENT_SHADER, FRAG)); g.linkProgram(prog);
+        if (!g.getProgramParameter(prog, g.LINK_STATUS)) throw new Error(g.getProgramInfoLog(prog));
+        g.useProgram(prog);
+        var buf = g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER, buf); g.bufferData(g.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), g.STATIC_DRAW);
+        var loc = g.getAttribLocation(prog, "a"); g.enableVertexAttribArray(loc); g.vertexAttribPointer(loc, 2, g.FLOAT, false, 0, 0);
+        glU = {}; ["uRes", "uT", "uNow", "uN", "uWing", "uDpr"].forEach(function (n) { glU[n] = g.getUniformLocation(prog, n); });
+        gl = g; return true;
+      } catch (e) { gl = null; return false; }
+    }
+    function sizeCurtain() {
+      if (!gl && !ctx && !initGL()) ctx = cv.getContext("2d");
+      cdpr = Math.min(window.devicePixelRatio || 1, gl ? 2 : 1.5); cw = window.innerWidth; ch = window.innerHeight;
+      cv.width = Math.round(cw * cdpr); cv.height = Math.round(ch * cdpr);
+      if (gl) gl.viewport(0, 0, cv.width, cv.height); else ctx.setTransform(cdpr, 0, 0, cdpr, 0, 0);
+    }
     function drawCurtain(t) {            // t — секунды от начала открытия (≤0 — закрыт)
-      var W = cw, H = ch, N = W < 640 ? 9 : 14, M = 28, wing = Math.max(16, Math.min(150, W * .09)), half = W / 2 + 1, minW = wing / N;
+      if (gl) {
+        gl.uniform2f(glU.uRes, cw, ch); gl.uniform1f(glU.uT, t); gl.uniform1f(glU.uNow, performance.now() / 1000);
+        gl.uniform1f(glU.uN, cw < 640 ? 9 : 14); gl.uniform1f(glU.uWing, Math.max(16, Math.min(150, cw * .09))); gl.uniform1f(glU.uDpr, cdpr);
+        gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); return;
+      }
+      var W = cw, H = ch, N = W < 640 ? 9 : 14, M = 20, wing = Math.max(16, Math.min(150, W * .09)), half = W / 2 + 1, minW = wing / N;
       var DUR = 1.9, LAG = .34, j, m, y;
       ctx.clearRect(0, 0, W, H);
       // ведущая кромка: низ ткани отстаёт от верха, после остановки затухающе покачивается
@@ -323,26 +392,31 @@
     }
     function burst(heroEl) {
       var all = samplePoints(); if (!all.length) return false;
-      var r = heroEl.getBoundingClientRect(), L = logo.getBoundingClientRect(), d = Math.min(window.devicePixelRatio || 1, 2);
-      burstCv.width = r.width * d; burstCv.height = r.height * d;
+      var r = heroEl.getBoundingClientRect(), L = $("#logoStage").getBoundingClientRect(), d = Math.min(window.devicePixelRatio || 1, 1.5);
+      var bh = Math.min(r.height, window.innerHeight + 200); burstCv.style.height = bh + "px"; burstCv.width = r.width * d; burstCv.height = bh * d;
       var c = burstCv.getContext("2d"); c.setTransform(d, 0, 0, d, 0, 0);
-      var W = L.width, H = L.height, ox = L.left - r.left, oy = L.top - r.top, S = parseFloat(getComputedStyle(logo).getPropertyValue("--S")) || 1.9;
+      var W = L.width, H = L.height, ox = L.left - r.left, oy = L.top - r.top, S = parseFloat(getComputedStyle(logo).getPropertyValue("--S")) || 2;
       var cx = ox + W / 2, cy = oy + H / 2, sc = W / 340, K = Math.min(all.length, W < 300 ? 650 : 1000), P = [], F = [], i;
+      var RK = parseFloat(getComputedStyle(logo).getPropertyValue("--rk")) || .4, RR = W * RK, PERSP = 1600;   // те же числа, что в CSS (.logo3d, .ring3d)
+      var wrap = function (u, v) { var phi = (u - .5) * W / RR, k = PERSP / (PERSP + RR * (1 - Math.cos(phi))); return [cx + RR * Math.sin(phi) * k, cy + (v - .5) * H * k]; };
       for (i = 0; i < K; i++) {
         var q = all[(Math.random() * all.length) | 0], u = q[0] + (Math.random() - .5) / 150, v = q[1] + (Math.random() - .5) / 150;
         var sx = cx + S * (u - BX) * W, sy = cy + S * (v - BY) * H, a = Math.atan2(sy - cy, sx - cx) + (Math.random() - .5) * 1.1, sp = (5 + Math.random() * 17) * sc;
-        P.push({ x: sx, y: sy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 2 * sc, tx: ox + u * W, ty: oy + v * H, free: .3 + Math.random() * .22, s: (1.3 + Math.random() * 1.9) * Math.max(sc, .8), tw: Math.random() * 6.28 });
+        var tg = wrap(u, v);
+        P.push({ x: sx, y: sy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 2 * sc, tx: tg[0], ty: tg[1], free: .3 + Math.random() * .22, s: (1.3 + Math.random() * 1.9) * Math.max(sc, .8), tw: Math.random() * 6.28 });
       }
       for (i = 0; i < 110; i++) {          // пена и искры, которые улетают
         var a2 = Math.random() * 6.28, sp2 = (3 + Math.random() * 15) * sc, bubble = i < 70;
         F.push({ x: cx + (Math.random() - .5) * 30 * sc, y: cy + (Math.random() - .5) * 90 * sc, vx: Math.cos(a2) * sp2, vy: Math.sin(a2) * sp2 - (bubble ? 3 : 1) * sc, r: bubble ? (2 + Math.random() * 6) * sc : 0, life: .7 + Math.random() * .9, bubble: bubble });
       }
+      // крышка: слетает с горлышка, кувыркается и падает
+      var cap = { x: cx, y: cy + S * (BY - .2751 - BY) * H, vx: -4.5 * sc, vy: -17 * sc, a: 0, va: -.32, w: 26 * sc * S / 1.9, h: 10 * sc * S / 1.9 };
       var t0 = performance.now(), prev = t0;
       (function frame(now) {
         now = now || performance.now(); var T = (now - t0) / 1000 / SLOW, dt = Math.min((now - prev) / 16.67, 3) / SLOW; prev = now;
         c.clearRect(0, 0, r.width, r.height);
-        if (T > 1.9) { burstCv.width = burstCv.width; return; }
-        var mix = Math.max(0, Math.min(1, (T - .3) / .85)), fade = T < 1.3 ? 1 : Math.max(0, 1 - (T - 1.3) / .45);
+        if (T > 2) { burstCv.width = burstCv.width; return; }
+        var mix = Math.max(0, Math.min(1, (T - .3) / .85)), fade = T < 1.4 ? 1 : Math.max(0, 1 - (T - 1.4) / .45);
         var R = Math.round(230 + 25 * mix), G = Math.round(199 + 56 * mix), B = Math.round(110 + 145 * mix), drag = Math.pow(.925, dt);
         c.globalCompositeOperation = "lighter";
         for (i = 0; i < F.length; i++) {
@@ -352,6 +426,13 @@
           else { c.beginPath(); c.moveTo(f.x, f.y); c.lineTo(f.x - f.vx * 2.4, f.y - f.vy * 2.4); c.strokeStyle = "rgba(230,199,110," + al.toFixed(3) + ")"; c.lineWidth = 1.6; c.stroke(); }
         }
         c.globalCompositeOperation = "source-over";
+        if (T < 1.5) {
+          cap.vy += .5 * dt; cap.vx *= Math.pow(.99, dt); cap.x += cap.vx * dt; cap.y += cap.vy * dt; cap.a += cap.va * dt;
+          c.save(); c.translate(cap.x, cap.y); c.rotate(cap.a); c.globalAlpha = T < 1.1 ? 1 : Math.max(0, 1 - (T - 1.1) / .4);
+          c.fillStyle = "#E6C76E"; c.fillRect(-cap.w / 2, -cap.h / 2, cap.w, cap.h * .62);
+          c.fillStyle = "#C9A227"; for (var q2 = 0; q2 < 7; q2++) c.fillRect(-cap.w / 2 + q2 * cap.w / 7, cap.h * .12, cap.w / 7 - 1, cap.h * .38);
+          c.restore(); c.globalAlpha = 1;
+        }
         c.fillStyle = "rgba(" + R + "," + G + "," + B + "," + fade.toFixed(3) + ")"; c.beginPath();
         for (i = 0; i < P.length; i++) {
           var p = P[i];
@@ -375,19 +456,23 @@
       later(function () {
         logo.classList.remove("is-charging"); logo.classList.add("is-burst");
         heroEl.classList.add("is-shake"); later(function () { heroEl.classList.remove("is-shake"); }, 450);
-        var ok = burst(heroEl), landAt = ok ? 1080 : 200;
-        later(function () { logo.classList.add("is-spin-in"); }, ok ? 820 : 300);      // надпись: оборот 360°
-        later(function () { logo.classList.add("is-bottle-in"); }, landAt);            // бутылка белая, на месте
-        later(function () { if (onDone) onDone(); }, landAt + 250);
-        later(function () { logo.className = "logo3d is-final"; logoBusy = false; }, landAt + 1700);
+        var ok = burst(heroEl), landAt = ok ? 1280 : 300;
+        later(function () { logo.classList.add("is-ring-in"); }, ok ? 220 : 60);       // надпись влетает на цилиндр: оборот 360°
+        later(function () { logo.classList.add("is-bottle"); }, landAt);               // частицы сели: бутылка белая, на месте
+        later(function () { if (onDone) onDone(); }, landAt + 200);
+        later(function () { logo.className = "logo3d is-final"; logoBusy = false; }, landAt + 700);
       }, chargeMs + 150);
     }
-    function spinOnly() {
-      if (logoBusy) return; logoBusy = true;
-      logo.className = "logo3d is-final"; void logo.offsetWidth; logo.classList.add("is-spin", "is-pulse");
-      later(function () { logo.className = "logo3d is-final"; logoBusy = false; }, 1700);
-    }
     logo.addEventListener("click", function () { if (!introDone || reduced) return; playLogo(700); });
+    /* 3D-кольцо на невидимом цилиндре: 18 полос на половину окружности с логотипом форума и 18 на половину с логотипом CCI.
+       Положение куска логотипа в каждой полосе считает CSS по --i, угол полосы — по --a. Вращение — CSS-анимация ring-spin. */
+    (function () {
+      var spin = $("#ringSpin"); if (!spin) return;
+      var N = 18, html = "", k;
+      for (var f = 0; f < 2; f++) for (k = 0; k < N; k++) html += '<i class="f' + f + '" style="--i:' + k + ';--a:' + ((k + .5) * 180 / N - 90 + f * 180).toFixed(2) + '"></i>';
+      spin.innerHTML = html;
+      ["logo-text.png", "horeca-forum-2026-white.png", "cci-white.png"].forEach(function (n) { var im = new Image(); im.src = bottleImg.src.replace(/[^/]+$/, n); });   // чтобы смена картинки в полосах не мигала
+    })();
 
     /* ---------- Запуск ---------- */
     function finish() {                  // мгновенно в конечное состояние (пропуск, страховка)
@@ -405,7 +490,7 @@
     if (reduced) { finish(); return; }
     if (seen && !force) {                // повторный заход: без занавеса, надпись делает оборот
       introDone = true; hideCurtain(false); root.classList.add("stage-lit"); showRest(0);
-      logo.className = "logo3d is-final"; later(spinOnly, 500); return;
+      logo.className = "logo3d is-final"; return;
     }
     try { sessionStorage.setItem("curtainSeen", "1"); } catch (e) {}
     root.classList.add("curtain-closed"); sizeCurtain(); drawCurtain(0); curtain.classList.add("is-drawn");

@@ -13,6 +13,7 @@ def _inline_font(m):
     data = base64.b64encode((root / "assets/fonts" / m.group(1)).read_bytes()).decode()
     return f'url("data:font/woff2;base64,{data}")'
 css = re.sub(r'url\("\.\./assets/fonts/([^"]+)"\)', _inline_font, css)
+css = css.replace('url("../assets/', 'url("assets/')   # CSS встраивается в страницу: пути считаются от неё
 data = (root / "data/event.js").read_text(encoding="utf-8")
 js = (root / "js/app.js").read_text(encoding="utf-8")
 out = f"""<title>{title}</title>
@@ -31,4 +32,33 @@ out = f"""<title>{title}</title>
 </script>
 """
 (root / "dist/artifact.html").write_text(out, encoding="utf-8")
+
+# вторая страница — банкетное меню: самостоятельный HTML со встроенными стилями и скриптами
+menu_src = (root / "menu.html").read_text(encoding="utf-8")
+menu_body = menu_src.split("<!--MENU-START-->")[1].split("<!--MENU-END-->")[0]
+menu_js = (root / "js/menu.js").read_text(encoding="utf-8")
+menu_out = f"""<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Банкетное меню</title>
+<link rel="icon" href="assets/logo/favicon.png" type="image/png">
+<style>
+{css}
+</style>
+</head>
+<body>
+{menu_body}
+<script>
+{data}
+</script>
+<script>
+{menu_js}
+</script>
+</body>
+</html>
+"""
+(root / "dist/menu.html").write_text(menu_out, encoding="utf-8")
+print("dist/menu.html", len(menu_out.encode()), "bytes")
 print("dist/artifact.html", len(out.encode()), "bytes")
