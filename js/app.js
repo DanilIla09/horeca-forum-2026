@@ -15,7 +15,8 @@
   /* ---- Простые поля ---- */
   $$("[data-field]").forEach(function (el) { var v = get(el.getAttribute("data-field")); if (v != null) el.textContent = v; });
   $("#navMeta").textContent = [D.dateText, D.timeText, D.venueShort].filter(Boolean).join(" · ");
-  $("#aboutEyebrow").textContent = D.about.eyebrow; $("#programEyebrow").textContent = D.program.eyebrow;
+  $("#aboutEyebrow").textContent = D.about.eyebrow || ""; $("#aboutEyebrow").hidden = !D.about.eyebrow; $("#programEyebrow").textContent = D.program.eyebrow;
+  var seasonEl = $('[data-field="season"]'); if (seasonEl) seasonEl.hidden = !D.season;
   $("#speakersEyebrow").textContent = D.speakers.eyebrow; $("#speakersSub").textContent = D.speakers.sub;
   $("#menuEyebrow").textContent = D.menu.eyebrow; $("#menuTeaser").textContent = D.menu.teaser || "";
   $("#venueEyebrow").textContent = D.venue.eyebrow; $("#orgLabel").textContent = D.footer.organizerLabel; $("#copyright").textContent = D.footer.copyright;
@@ -89,7 +90,8 @@
   })();
 
   /* ---- О форуме ---- */
-  $("#aboutLead").textContent = D.about.lead;
+  $("#aboutLead").innerHTML = esc(D.about.lead).replace(/\{([^}]+)\}/g, "<strong>$1</strong>");
+  $("#aboutText").hidden = !(D.about.paragraphs || []).length;
   var at = $("#aboutText"); (D.about.paragraphs || []).forEach(function (p) { var el = doc.createElement("p"); el.textContent = p; at.appendChild(el); });
   var pl = $("#pillars"); (D.about.pillars || []).forEach(function (p, i) {
     var li = doc.createElement("li"); li.style.setProperty("--i", i);
@@ -157,32 +159,18 @@
     '<div class="poster__body"><p class="eyebrow eyebrow--gold">' + esc(H.eyebrow) + '</p><p class="poster__kicker">' + esc(H.kicker) + '</p>' +
     '<h2 class="poster__name" id="hostName">' + esc(H.name).replace(" ", "<br>") + '</h2>' + (H.role ? '<p class="poster__role">' + esc(H.role) + '</p>' : '') +
     '<div class="poster__text">' + [].concat(H.description || []).map(function (t) { return '<p>' + esc(t) + '</p>'; }).join('') + '</div>' +
-    '<p class="eyebrow eyebrow--gold">' + esc(H.footnote) + "</p></div>";
+    (H.footnote ? '<p class="eyebrow eyebrow--gold">' + esc(H.footnote) + "</p>" : "") + "</div>";
 
-  /* ---- Схема проезда: блок показывается, когда в данных указан файл (venue.scheme) ---- */
+  /* ---- Локация: кнопки маршрута и изображение «Как добраться» (появляется, когда в данных задан venue.scheme) ---- */
   (function () {
-    var V = D.venue || {}, block = $("#schemeBlock"), box = $("#lightbox");
-    if (!V.scheme || !block) return;
-    $("#schemeImg").src = V.scheme; $("#lightboxImg").src = V.scheme; $("#schemeCaption").textContent = V.schemeCaption || ""; block.hidden = false;
+    var V = D.venue || {}, how = $("#venueHow"), box = $("#lightbox"), wrap = $("#venue .venue");
+    $("#route2gis").href = V.route2gis || "#"; $("#routeGoogle").href = V.routeGoogle || "#";
+    if (!V.scheme) { if (wrap) wrap.classList.add("venue--solo"); return; }
+    $("#schemeImg").src = V.scheme; $("#lightboxImg").src = V.scheme; $("#schemeCaption").textContent = V.schemeCaption || ""; $("#schemeCaption").hidden = !V.schemeCaption; how.hidden = false;
     var close = function () { box.hidden = true; doc.body.classList.remove("modal-open"); };
     $("#schemeOpen").addEventListener("click", function () { box.hidden = false; doc.body.classList.add("modal-open"); $("#lightboxClose").focus(); });
     box.addEventListener("click", close);
     doc.addEventListener("keydown", function (e) { if (e.key === "Escape" && !box.hidden) close(); });
-  })();
-
-  /* ---- Локация: карта ---- */
-  (function () {
-    var V = D.venue || {}, box = $("#venueMap");
-    $("#route2gis").href = V.route2gis || "#"; $("#routeGoogle").href = V.routeGoogle || "#";
-    var embedded = /claude\.ai$|claudeusercontent\.com$|\.claude\.site$/.test(location.hostname) || location.protocol === "file:" || /\bmap=static\b/.test(location.search);
-    var src = V.mapEmbed || (V.mapQuery ? "https://www.google.com/maps?q=" + encodeURIComponent(V.mapQuery) + "&z=15&hl=ru&output=embed" : "");
-    if (src && !embedded) {
-      var f = doc.createElement("iframe"); f.title = "Карта: место проведения"; f.loading = "lazy"; f.referrerPolicy = "no-referrer-when-downgrade"; f.allowFullscreen = true; f.src = src; box.appendChild(f);
-    } else {
-      box.classList.add("venue__map--static");
-      box.innerHTML = '<div class="map"><span class="map__road map__road--a"></span><span class="map__road map__road--b"></span><span class="map__pin"><i></i></span><span class="map__label">' + esc(V.name || "") + "</span>" +
-        '<a class="map__open" href="' + esc(V.routeGoogle || "#") + '" target="_blank" rel="noopener">Открыть карту ↗</a></div>';
-    }
   })();
 
   /* ---- Фон первого экрана. Всё движется только через transform/opacity: видеокарта двигает готовые слои,
