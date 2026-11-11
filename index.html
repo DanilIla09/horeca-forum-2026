@@ -13,15 +13,15 @@
   <link rel="apple-touch-icon" href="assets/logo/favicon.png">
   <link rel="preload" href="assets/fonts/helvetica-regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/helvetica-bold.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=20261111e">
 </head>
 <body>
 <!--PAGE-START-->
+  <script>document.documentElement.className += " js";</script>
   <!-- Занавес на открытии -->
   <div class="curtain" id="curtain" aria-hidden="true">
+    <canvas class="curtain__canvas" id="curtainCanvas"></canvas>
     <div class="curtain__rod"></div>
-    <div class="curtain__panel curtain__panel--left"><span class="curtain__edge"></span></div>
-    <div class="curtain__panel curtain__panel--right"><span class="curtain__edge"></span></div>
     <div class="curtain__valance"></div>
   </div>
 
@@ -51,10 +51,23 @@
     <section class="hero" id="home">
       <div class="wing wing--l" aria-hidden="true"></div>
       <div class="wing wing--r" aria-hidden="true"></div>
+      <div class="beam beam--l" aria-hidden="true"></div>
+      <div class="beam beam--r" aria-hidden="true"></div>
       <canvas class="hero__dust" id="dust" aria-hidden="true"></canvas>
+      <canvas class="hero__burst" id="burst" aria-hidden="true"></canvas>
       <div class="hero__inner">
         <p class="eyebrow eyebrow--gold reveal" data-field="season"></p>
-        <img class="hero__logo reveal" src="assets/logo/horeca-forum-2026-white.png" alt="Coca-Cola HoReCa Forum 2026" width="1200" height="1085" fetchpriority="high">
+        <!-- Логотип слоями: три строки надписи вращаются, бутылка собирается из частиц. Центры слоёв — в --ox/--oy. -->
+        <button class="logo3d" id="logo3d" type="button" aria-label="Coca-Cola HoReCa Forum 2026. Нажмите, чтобы повторить анимацию" data-bx="84.17" data-by="41.71">
+          <img class="logo3d__layer logo3d__line" style="--i:0;--ox:38.17%;--oy:33.41%" src="assets/logo/l-script.png" alt="" width="1200" height="1085" fetchpriority="high">
+          <img class="logo3d__layer logo3d__line" style="--i:1;--ox:39.67%;--oy:62.3%" src="assets/logo/l-horeca.png" alt="" width="1200" height="1085">
+          <img class="logo3d__layer logo3d__line" style="--i:2;--ox:50.62%;--oy:79.4%" src="assets/logo/l-forum.png" alt="" width="1200" height="1085">
+          <img class="logo3d__layer logo3d__bottle" id="logoBottle" style="--ox:84.17%;--oy:41.71%" src="assets/logo/l-bottle.png" alt="" width="1200" height="1085">
+          <span class="logo3d__gold" id="logoGold" aria-hidden="true"><i></i></span>
+          <span class="logo3d__flash" aria-hidden="true"></span>
+          <span class="logo3d__ring" aria-hidden="true"></span>
+          <span class="logo3d__ring logo3d__ring--2" aria-hidden="true"></span>
+        </button>
         <div class="divider divider--light reveal" aria-hidden="true"><i></i><b>◆</b><i></i></div>
         <h1 class="hero__title reveal" id="heroTitle"></h1>
         <dl class="facts reveal">
@@ -192,7 +205,7 @@
     </div>
   </div>
 <!--PAGE-END-->
-  <script src="data/event.js"></script>
-  <script src="js/app.js"></script>
+  <script src="data/event.js?v=20261111e"></script>
+  <script src="js/app.js?v=20261111e"></script>
 </body>
 </html>

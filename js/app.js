@@ -34,18 +34,6 @@
     });
   })();
 
-  /* ---- Занавес ---- */
-  var curtain = $("#curtain");
-  (function () {
-    var seen = false;
-    try { seen = sessionStorage.getItem("curtainSeen") === "1"; } catch (e) {}
-    if (seen || reduced) { curtain.classList.add("is-hidden"); root.classList.add("stage-lit"); return; }
-    root.classList.add("curtain-closed");
-    setTimeout(function () { curtain.classList.add("is-open"); root.classList.remove("curtain-closed"); root.classList.add("stage-lit"); }, 350);
-    setTimeout(function () { curtain.classList.add("is-hidden"); }, 2000);
-    try { sessionStorage.setItem("curtainSeen", "1"); } catch (e) {}
-  })();
-
   /* ---- Навигация ---- */
   var nav = $("#nav"), burger = $("#burger");
   var closeNav = function () { nav.classList.remove("is-open"); burger.setAttribute("aria-expanded", "false"); doc.body.classList.remove("nav-open"); };
@@ -234,12 +222,207 @@
     doc.addEventListener("visibilitychange", function () { if (doc.hidden) running = false; else if (!running) { running = true; frame(); } });
   })();
 
-  /* ---- Появление при прокрутке (+ страховка: всё видно через 2,5 с) ---- */
-  var reveals = $$(".reveal");
-  $$(".hero .reveal").forEach(function (el) { el.classList.add("in"); }); // первый экран не ждёт наблюдателя
+  /* ---- Появление при прокрутке (+ страховка: всё видно через 2,5 с). Первый экран ведёт вступление. ---- */
+  var reveals = $$(".reveal").filter(function (el) { return !el.closest(".hero"); });
   if ("IntersectionObserver" in window && !reduced) {
     var io = new IntersectionObserver(function (es) { es.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } }); }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
     reveals.forEach(function (el) { io.observe(el); });
     setTimeout(function () { reveals.forEach(function (el) { if (el.getBoundingClientRect().top < window.innerHeight) el.classList.add("in"); }); }, 2500);
   } else { reveals.forEach(function (el) { el.classList.add("in"); }); }
+
+  /* ======================================================================
+     ВСТУПЛЕНИЕ: тканевый занавес → золотая бутылка взрывается → частицы
+     собираются в белую бутылку логотипа → надпись делает оборот на 360°.
+     Один раз за сессию; тап по логотипу повторяет взрыв и вращение.
+     ====================================================================== */
+  (function () {
+    var curtain = $("#curtain"), cv = $("#curtainCanvas"), logo = $("#logo3d"), bottleImg = $("#logoBottle"), burstCv = $("#burst");
+    var heroReveals = $$(".hero .reveal"), BX = parseFloat(logo.getAttribute("data-bx")) / 100, BY = parseFloat(logo.getAttribute("data-by")) / 100;
+    var T_OPEN = 350, T_CHARGE = 1000, T_BURST = 2250;            // мс от старта вступления
+    var introDone = false, logoBusy = false, timers = [];
+    logo.style.setProperty("--bx", (BX * 100) + "%"); logo.style.setProperty("--by", (BY * 100) + "%");
+    logo.style.setProperty("--mask", 'url("' + (bottleImg.currentSrc || bottleImg.src) + '")');
+    // отладка: ?slow=8 замедляет всё вступление в 8 раз (и CSS-анимации логотипа)
+    var SLOW = Math.max(1, parseFloat((location.search.match(/[?&]slow=([\d.]+)/) || [])[1]) || 1);
+    if (SLOW > 1) (function rate() { if (doc.getAnimations) doc.getAnimations().forEach(function (a) { var t = a.effect && a.effect.target; if (t && t.closest && t.closest(".logo3d, .curtain, .hero__inner")) a.playbackRate = 1 / SLOW; }); requestAnimationFrame(rate); })();
+    var later = function (fn, ms) { var id = setTimeout(fn, ms * SLOW); timers.push(id); return id; };
+
+    function showRest(delay) {
+      heroReveals.forEach(function (el, i) { el.style.transitionDelay = (delay + i * 110) + "ms"; el.classList.add("in"); });
+      later(function () { root.classList.add("logo-done"); }, delay);
+    }
+    function hideCurtain(fade) {
+      root.classList.remove("curtain-closed");
+      if (!fade) { curtain.classList.add("is-hidden"); return; }
+      curtain.classList.add("is-fading"); setTimeout(function () { curtain.classList.add("is-hidden"); }, 650);
+    }
+
+    /* ---------- Занавес: складки ткани на canvas ---------- */
+    var ctx = cv.getContext("2d"), cw = 0, ch = 0;
+    function sizeCurtain() { var d = Math.min(window.devicePixelRatio || 1, 2); cw = window.innerWidth; ch = window.innerHeight; cv.width = cw * d; cv.height = ch * d; ctx.setTransform(d, 0, 0, d, 0, 0); }
+    function drawCurtain(t) {            // t — секунды от начала открытия (≤0 — закрыт)
+      var W = cw, H = ch, N = W < 640 ? 9 : 14, M = 28, wing = Math.max(16, Math.min(150, W * .09)), half = W / 2 + 1, minW = wing / N;
+      var DUR = 1.9, LAG = .34, j, m, y;
+      ctx.clearRect(0, 0, W, H);
+      // ведущая кромка: низ ткани отстаёт от верха, после остановки затухающе покачивается
+      var lead = [];
+      for (m = 0; m <= M; m++) {
+        var lag = LAG * Math.pow(m / M, 1.4), k = (t - lag) / DUR; k = k < 0 ? 0 : k > 1 ? 1 : k;
+        var e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2, after = t - lag - DUR;
+        var sway = after > 0 ? Math.sin(after * 6.5) * Math.exp(-after * 2.6) * 12 * (m / M) : 0;
+        var idle = t <= 0 ? Math.sin(performance.now() / 900 + m * .5) * 1.5 * (m / M) : 0;
+        lead.push(half + (wing - half) * e + sway + idle);
+      }
+      // складки: часть сжимается равномерно, часть «сгребается» кромкой
+      var E = [];
+      for (j = 0; j <= N; j++) { E.push([]); for (m = 0; m <= M; m++) { var xl = lead[m], uni = j / N * xl, push = Math.min(j / N * half, xl - (N - j) * minW); E[j].push(uni * .45 + push * .55); } }
+      for (var side = 0; side < 2; side++) {
+        ctx.save(); if (side) { ctx.translate(W, 0); ctx.scale(-1, 1); }
+        // каждая складка — столбик из M трапеций со своим градиентом, чтобы объём шёл за изгибом ткани
+        for (j = 0; j < N; j++) for (m = 0; m < M; m++) {
+          var xa = (E[j][m] + E[j][m + 1]) / 2, xb = (E[j + 1][m] + E[j + 1][m + 1]) / 2, g = ctx.createLinearGradient(xa, 0, Math.max(xb, xa + .5), 0);
+          g.addColorStop(0, "#560612"); g.addColorStop(.28, "#a30d25"); g.addColorStop(.5, "#d6243f"); g.addColorStop(.72, "#a30d25"); g.addColorStop(1, "#4a0510");
+          ctx.beginPath(); ctx.moveTo(E[j][m], H * m / M); ctx.lineTo(E[j + 1][m] + .6, H * m / M);
+          ctx.lineTo(E[j + 1][m + 1] + .6, H * (m + 1) / M + .6); ctx.lineTo(E[j][m + 1], H * (m + 1) / M + .6);
+          ctx.closePath(); ctx.fillStyle = g; ctx.fill();
+        }
+        // общий объём: тень сверху под карнизом и к полу
+        ctx.beginPath(); ctx.moveTo(0, 0);
+        for (m = 0; m <= M; m++) ctx.lineTo(lead[m], H * m / M);
+        ctx.lineTo(0, H); ctx.closePath();
+        var vg = ctx.createLinearGradient(0, 0, 0, H);
+        vg.addColorStop(0, "rgba(0,0,0,.38)"); vg.addColorStop(.14, "rgba(0,0,0,0)"); vg.addColorStop(.62, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,.5)");
+        ctx.fillStyle = vg; ctx.fill();
+        // золотая кайма по кромке и по подолу
+        var gg = ctx.createLinearGradient(0, 0, 0, H); gg.addColorStop(0, "#f3dc94"); gg.addColorStop(.5, "#C9A227"); gg.addColorStop(1, "#7d620f");
+        ctx.beginPath(); ctx.moveTo(lead[0], 0); for (m = 1; m <= M; m++) ctx.lineTo(lead[m], H * m / M);
+        ctx.strokeStyle = gg; ctx.lineWidth = W < 640 ? 4 : 6; ctx.stroke();
+        ctx.fillStyle = "rgba(201,162,39,.9)"; ctx.fillRect(0, H - 7, lead[M], 3); ctx.fillStyle = "rgba(230,199,110,.5)"; ctx.fillRect(0, H - 13, lead[M], 1.5);
+        // тень от кромки на сцену
+        var sx = lead[M >> 1], sg = ctx.createLinearGradient(sx, 0, sx + 90, 0); sg.addColorStop(0, "rgba(0,0,0,.42)"); sg.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.beginPath(); ctx.moveTo(lead[0] + 3, 0); for (m = 1; m <= M; m++) ctx.lineTo(lead[m] + 3, H * m / M);
+        for (m = M; m >= 0; m--) ctx.lineTo(lead[m] + 93, H * m / M); ctx.closePath(); ctx.fillStyle = sg; ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    /* ---------- Частицы: бутылка разлетается и собирается на месте ---------- */
+    var pts = null;
+    function samplePoints() {            // точки силуэта бутылки (u, v — доли холста логотипа)
+      if (pts) return pts;
+      if (!bottleImg.complete || !bottleImg.naturalWidth) return [];
+      try {
+        var w = 150, h = Math.round(w * 1085 / 1200), oc = doc.createElement("canvas"); oc.width = w; oc.height = h;
+        var c2 = oc.getContext("2d"); c2.drawImage(bottleImg, 0, 0, w, h);
+        var d = c2.getImageData(0, 0, w, h).data, all = [];
+        for (var y = 0; y < h; y++) for (var x = 0; x < w; x++) if (d[(y * w + x) * 4 + 3] > 120) all.push([(x + .5) / w, (y + .5) / h]);
+        if (all.length) pts = all;
+        return all;
+      } catch (e) { return []; }
+      return pts;
+    }
+    function burst(heroEl) {
+      var all = samplePoints(); if (!all.length) return false;
+      var r = heroEl.getBoundingClientRect(), L = logo.getBoundingClientRect(), d = Math.min(window.devicePixelRatio || 1, 2);
+      burstCv.width = r.width * d; burstCv.height = r.height * d;
+      var c = burstCv.getContext("2d"); c.setTransform(d, 0, 0, d, 0, 0);
+      var W = L.width, H = L.height, ox = L.left - r.left, oy = L.top - r.top, S = parseFloat(getComputedStyle(logo).getPropertyValue("--S")) || 1.9;
+      var cx = ox + W / 2, cy = oy + H / 2, sc = W / 340, K = Math.min(all.length, W < 300 ? 650 : 1000), P = [], F = [], i;
+      for (i = 0; i < K; i++) {
+        var q = all[(Math.random() * all.length) | 0], u = q[0] + (Math.random() - .5) / 150, v = q[1] + (Math.random() - .5) / 150;
+        var sx = cx + S * (u - BX) * W, sy = cy + S * (v - BY) * H, a = Math.atan2(sy - cy, sx - cx) + (Math.random() - .5) * 1.1, sp = (5 + Math.random() * 17) * sc;
+        P.push({ x: sx, y: sy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 2 * sc, tx: ox + u * W, ty: oy + v * H, free: .3 + Math.random() * .22, s: (1.3 + Math.random() * 1.9) * Math.max(sc, .8), tw: Math.random() * 6.28 });
+      }
+      for (i = 0; i < 110; i++) {          // пена и искры, которые улетают
+        var a2 = Math.random() * 6.28, sp2 = (3 + Math.random() * 15) * sc, bubble = i < 70;
+        F.push({ x: cx + (Math.random() - .5) * 30 * sc, y: cy + (Math.random() - .5) * 90 * sc, vx: Math.cos(a2) * sp2, vy: Math.sin(a2) * sp2 - (bubble ? 3 : 1) * sc, r: bubble ? (2 + Math.random() * 6) * sc : 0, life: .7 + Math.random() * .9, bubble: bubble });
+      }
+      var t0 = performance.now(), prev = t0;
+      (function frame(now) {
+        now = now || performance.now(); var T = (now - t0) / 1000 / SLOW, dt = Math.min((now - prev) / 16.67, 3) / SLOW; prev = now;
+        c.clearRect(0, 0, r.width, r.height);
+        if (T > 1.9) { burstCv.width = burstCv.width; return; }
+        var mix = Math.max(0, Math.min(1, (T - .3) / .85)), fade = T < 1.3 ? 1 : Math.max(0, 1 - (T - 1.3) / .45);
+        var R = Math.round(230 + 25 * mix), G = Math.round(199 + 56 * mix), B = Math.round(110 + 145 * mix), drag = Math.pow(.925, dt);
+        c.globalCompositeOperation = "lighter";
+        for (i = 0; i < F.length; i++) {
+          var f = F[i]; if (T > f.life) continue; var al = (1 - T / f.life) * .8;
+          f.vx *= drag; f.vy = f.vy * drag + (f.bubble ? -.05 : .16) * dt; f.x += f.vx * dt; f.y += f.vy * dt;
+          if (f.bubble) { c.beginPath(); c.arc(f.x, f.y, f.r, 0, 6.28); c.strokeStyle = "rgba(255,240,205," + al.toFixed(3) + ")"; c.lineWidth = 1.2; c.stroke(); }
+          else { c.beginPath(); c.moveTo(f.x, f.y); c.lineTo(f.x - f.vx * 2.4, f.y - f.vy * 2.4); c.strokeStyle = "rgba(230,199,110," + al.toFixed(3) + ")"; c.lineWidth = 1.6; c.stroke(); }
+        }
+        c.globalCompositeOperation = "source-over";
+        c.fillStyle = "rgba(" + R + "," + G + "," + B + "," + fade.toFixed(3) + ")"; c.beginPath();
+        for (i = 0; i < P.length; i++) {
+          var p = P[i];
+          if (T < p.free) { p.vx *= drag; p.vy = p.vy * drag + .1 * dt; p.x += p.vx * dt; p.y += p.vy * dt; }
+          else { var k = Math.min(1, (T - p.free) / .8), pull = Math.min(1, (.035 + .34 * k * k) * dt), dx = p.tx - p.x, dy = p.ty - p.y, sw = .07 * (1 - k) * dt; p.x += dx * pull - dy * sw; p.y += dy * pull + dx * sw; }
+          var sz = p.s * (1 - .3 * mix) * (.8 + .2 * Math.sin(T * 14 + p.tw));
+          c.moveTo(p.x + sz, p.y); c.arc(p.x, p.y, sz, 0, 6.28);
+        }
+        c.fill();
+        requestAnimationFrame(frame);
+      })();
+      return true;
+    }
+
+    /* ---------- Сцена логотипа: зарядка → взрыв → сборка → вращение ---------- */
+    function playLogo(chargeMs, onDone) {
+      if (logoBusy) return; logoBusy = true;
+      var heroEl = $("#home");
+      logo.className = "logo3d"; void logo.offsetWidth;
+      logo.style.setProperty("--charge", (chargeMs / 1000) + "s"); logo.classList.add("is-charging");
+      later(function () {
+        logo.classList.remove("is-charging"); logo.classList.add("is-burst");
+        heroEl.classList.add("is-shake"); later(function () { heroEl.classList.remove("is-shake"); }, 450);
+        var ok = burst(heroEl), landAt = ok ? 1080 : 200;
+        later(function () { logo.classList.add("is-spin-in"); }, ok ? 820 : 300);      // надпись: оборот 360°
+        later(function () { logo.classList.add("is-bottle-in"); }, landAt);            // бутылка белая, на месте
+        later(function () { if (onDone) onDone(); }, landAt + 250);
+        later(function () { logo.className = "logo3d is-final"; logoBusy = false; }, landAt + 1700);
+      }, chargeMs + 150);
+    }
+    function spinOnly() {
+      if (logoBusy) return; logoBusy = true;
+      logo.className = "logo3d is-final"; void logo.offsetWidth; logo.classList.add("is-spin", "is-pulse");
+      later(function () { logo.className = "logo3d is-final"; logoBusy = false; }, 1700);
+    }
+    logo.addEventListener("click", function () { if (!introDone || reduced) return; playLogo(700); });
+
+    /* ---------- Запуск ---------- */
+    function finish() {                  // мгновенно в конечное состояние (пропуск, страховка)
+      if (introDone) return; introDone = true;
+      timers.forEach(clearTimeout); timers = []; logoBusy = false;
+      hideCurtain(false); root.classList.add("stage-lit");
+      logo.className = "logo3d is-final"; burstCv.width = burstCv.width;
+      showRest(0); unbind();
+    }
+    var skipEvents = ["pointerdown", "keydown", "wheel", "touchstart"];
+    function unbind() { skipEvents.forEach(function (ev) { window.removeEventListener(ev, finish); }); }
+
+    var seen = false, force = /\bintro=1\b/.test(location.search);
+    try { seen = sessionStorage.getItem("curtainSeen") === "1"; } catch (e) {}
+    if (reduced) { finish(); return; }
+    if (seen && !force) {                // повторный заход: без занавеса, надпись делает оборот
+      introDone = true; hideCurtain(false); root.classList.add("stage-lit"); showRest(0);
+      logo.className = "logo3d is-final"; later(spinOnly, 500); return;
+    }
+    try { sessionStorage.setItem("curtainSeen", "1"); } catch (e) {}
+    root.classList.add("curtain-closed"); sizeCurtain(); drawCurtain(0); curtain.classList.add("is-drawn");
+    window.addEventListener("resize", sizeCurtain);
+    skipEvents.forEach(function (ev) { window.addEventListener(ev, finish, { passive: true }); });
+    var start = performance.now(), curtainLive = true;
+    (function loop(now) {
+      if (!curtainLive || introDone) return;
+      var t = (((now || performance.now()) - start) / SLOW - T_OPEN) / 1000; drawCurtain(t);
+      if (t > 3.1) { curtainLive = false; hideCurtain(true); return; }
+      requestAnimationFrame(loop);
+    })();
+    later(function () { curtain.classList.add("is-open"); root.classList.add("stage-lit"); }, T_OPEN);
+    later(function () { root.classList.remove("curtain-closed"); }, T_OPEN + 1500);
+    later(function () {
+      playLogo(T_BURST - T_CHARGE - 150, function () { introDone = true; unbind(); showRest(250); });
+    }, T_CHARGE);
+    setTimeout(finish, 9000 * SLOW);            // страховка: страница всегда приходит в готовый вид
+  })();
 })();
