@@ -129,17 +129,15 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .mote { position: absolute; left: var(--x); top: var(--y); width: var(--s); height: var(--s); border-radius: 50%; background: #E6C76E; opacity: 0; animation: mote var(--d) linear var(--delay) infinite; }
 @keyframes mote { 0% { opacity: 0; transform: translate3d(0, 0, 0); } 18% { opacity: var(--o); } 82% { opacity: var(--o); } 100% { opacity: 0; transform: translate3d(var(--dx), var(--dy), 0); } }
 .hero__burst { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 4; pointer-events: none; }
-/* лучи софитов: мягкий конус рисуется один раз коническим градиентом, дальше только поворот слоя */
+/* лучи софитов: мягкий конус рисуется один раз коническим градиентом и стоит неподвижно (постоянное движение заставляло пересобирать кадр 60 раз в секунду) */
 .beam { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0; transition: opacity 1.6s ease .3s; transform-origin: 9% -6%;
   background: conic-gradient(from 146deg at 9% -6%, rgba(255,236,190,0) 0deg, rgba(255,236,190,.2) 6deg, rgba(255,236,190,.2) 9deg, rgba(255,236,190,0) 17deg, rgba(255,236,190,0) 360deg);
   -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0,0,0,.55) 50%, transparent 86%); mask-image: linear-gradient(180deg, #000 0%, rgba(0,0,0,.55) 50%, transparent 86%);
-  animation: beam 13s ease-in-out infinite alternate; }
-.beam--r { transform: scaleX(-1); animation-name: beam-r; animation-delay: -6s; }
+  transform: rotate(1deg); }
+.beam--r { transform: scaleX(-1) rotate(1deg); }
 .stage-lit .beam { opacity: 1; }
-@keyframes beam { from { transform: rotate(-4deg); } to { transform: rotate(5deg); } }
-@keyframes beam-r { from { transform: scaleX(-1) rotate(-5deg); } to { transform: scaleX(-1) rotate(4deg); } }
 /* первый экран ушёл из вида или вкладка скрыта: фоновые анимации стоят */
-.hero.is-away .beam, .hero.is-away .mote { animation-play-state: paused; }
+.hero.is-away .mote { animation-play-state: paused; }
 .wing { position: absolute; top: 0; bottom: 0; width: clamp(16px, 9vw, 150px); z-index: 2; pointer-events: none;
   background: repeating-linear-gradient(90deg, rgba(0,0,0,.3) 0 8px, rgba(0,0,0,0) 8px 20px, rgba(255,255,255,.06) 20px 26px, rgba(0,0,0,0) 26px 38px), linear-gradient(180deg, #a30d25, var(--red) 30%, #8e0b22 75%, #5c0714);
   box-shadow: inset 0 -60px 100px rgba(0,0,0,.4); }
@@ -161,6 +159,8 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
    Ось отодвинута назад на --R, поэтому обращённая к зрителю часть логотипа имеет натуральный размер. */
 .ring3d { position: absolute; inset: 0; display: block; perspective: 1600px; opacity: 0; transition: opacity .5s ease; pointer-events: none; }
 .logo3d.is-ring-in .ring3d, .logo3d.is-final .ring3d { opacity: 1; }
+.ring3d.is-gl { perspective: none; }
+.ring3d canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .ring3d__tilt, .ring3d__spin { position: absolute; left: 50%; top: 50%; width: 0; height: 0; display: block; transform-style: preserve-3d; }
 .ring3d__tilt { transform: translateZ(calc(var(--R) * -1)); }
 .ring3d__spin { left: 0; top: 0; }

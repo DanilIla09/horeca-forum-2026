@@ -203,7 +203,7 @@
       raf = requestAnimationFrame(function () { raf = 0; var y = Math.min(window.scrollY, 900); if (y === lastY) return; lastY = y; wings.forEach(function (w) { w.style.transform = "translate3d(0," + (y * .18).toFixed(1) + "px,0)"; }); });
     }, { passive: true });
     // золотая пыль: несколько точек на CSS-анимации вместо canvas на весь экран
-    var dust = $("#dust"), n = window.innerWidth < 640 ? 12 : 22, frag = doc.createDocumentFragment();
+    var dust = $("#dust"), n = window.innerWidth < 640 ? 8 : 14, frag = doc.createDocumentFragment();
     for (var i = 0; i < n; i++) {
       var m = doc.createElement("span"), d = 9 + Math.random() * 12; m.className = "mote";
       m.style.cssText = "--x:" + (Math.random() * 100).toFixed(1) + "%;--y:" + (15 + Math.random() * 85).toFixed(1) + "%;--s:" + (1.5 + Math.random() * 2.5).toFixed(1) + "px;--o:" + (.25 + Math.random() * .45).toFixed(2) +
@@ -398,7 +398,7 @@
       var W = L.width, H = L.height, ox = L.left - r.left, oy = L.top - r.top, S = parseFloat(getComputedStyle(logo).getPropertyValue("--S")) || 2;
       var cx = ox + W / 2, cy = oy + H / 2, sc = W / 340, K = Math.min(all.length, W < 300 ? 650 : 1000), P = [], F = [], i;
       var RK = parseFloat(getComputedStyle(logo).getPropertyValue("--rk")) || .4, RR = W * RK, PERSP = 1600;   // те же числа, что в CSS (.logo3d, .ring3d)
-      var wrap = function (u, v) { var phi = (u - .5) * W / RR, k = PERSP / (PERSP + RR * (1 - Math.cos(phi))); return [cx + RR * Math.sin(phi) * k, cy + (v - .5) * H * k]; };
+      var wrap = function (u, v) { var phi = (u - .5) * W / RR, k = ring ? 1 : PERSP / (PERSP + RR * (1 - Math.cos(phi))); return [cx + RR * Math.sin(phi) * k, cy + (v - .5) * H * k]; };
       for (i = 0; i < K; i++) {
         var q = all[(Math.random() * all.length) | 0], u = q[0] + (Math.random() - .5) / 150, v = q[1] + (Math.random() - .5) / 150;
         var sx = cx + S * (u - BX) * W, sy = cy + S * (v - BY) * H, a = Math.atan2(sy - cy, sx - cx) + (Math.random() - .5) * 1.1, sp = (5 + Math.random() * 17) * sc;
@@ -451,27 +451,126 @@
     function playLogo(chargeMs, onDone) {
       if (logoBusy) return; logoBusy = true;
       var heroEl = $("#home");
-      logo.className = "logo3d"; void logo.offsetWidth;
+      logo.className = "logo3d"; void logo.offsetWidth; if (ring) ring.hide();
       logo.style.setProperty("--charge", (chargeMs / 1000) + "s"); logo.classList.add("is-charging");
       later(function () {
         logo.classList.remove("is-charging"); logo.classList.add("is-burst");
         heroEl.classList.add("is-shake"); later(function () { heroEl.classList.remove("is-shake"); }, 450);
         var ok = burst(heroEl), landAt = ok ? 1280 : 300;
-        later(function () { logo.classList.add("is-ring-in"); }, ok ? 220 : 60);       // надпись влетает на цилиндр: оборот 360°
-        later(function () { logo.classList.add("is-bottle"); }, landAt);               // частицы сели: бутылка белая, на месте
+        later(function () { logo.classList.add("is-ring-in"); if (ring) ring.spinIn(); }, ok ? 220 : 60);       // надпись влетает на цилиндр: оборот 360°
+        later(function () { logo.classList.add("is-bottle"); if (ring) ring.setFull(); }, landAt);               // частицы сели: бутылка белая, на месте
         later(function () { if (onDone) onDone(); }, landAt + 200);
-        later(function () { logo.className = "logo3d is-final"; logoBusy = false; }, landAt + 700);
+        later(function () { logo.className = "logo3d is-final"; logoBusy = false; if (ring) ring.rest(); }, landAt + 700);
       }, chargeMs + 150);
     }
     logo.addEventListener("click", function () { if (!introDone || reduced) return; playLogo(700); });
-    /* 3D-кольцо на невидимом цилиндре: 18 полос на половину окружности с логотипом форума и 18 на половину с логотипом CCI.
-       Положение куска логотипа в каждой полосе считает CSS по --i, угол полосы — по --a. Вращение — CSS-анимация ring-spin. */
-    (function () {
-      var spin = $("#ringSpin"); if (!spin) return;
-      var N = 18, html = "", k;
-      for (var f = 0; f < 2; f++) for (k = 0; k < N; k++) html += '<i class="f' + f + '" style="--i:' + k + ';--a:' + ((k + .5) * 180 / N - 90 + f * 180).toFixed(2) + '"></i>';
-      spin.innerHTML = html;
-      ["logo-text.png", "horeca-forum-2026-white.png", "cci-white.png"].forEach(function (n) { var im = new Image(); im.src = bottleImg.src.replace(/[^/]+$/, n); });   // чтобы смена картинки в полосах не мигала
+    /* Цилиндр с логотипами. Основной путь — один WebGL-холст: фрагментный шейдер для каждого пикселя находит точку
+       на поверхности цилиндра и берёт цвет из текстуры логотипа (половина окружности — форум, вторая — CCI).
+       Это один слой вместо 36, поэтому вращение почти ничего не стоит. Без WebGL — запасной вариант на CSS-полосах. */
+    var ring = (function () {
+      var holder = $(".ring3d"), spinEl = $("#ringSpin");
+      var base = bottleImg.src.replace(/[^/]+$/, "");
+      function buildStrips() {             // запасной путь: 36 прозрачных полос, вращение — CSS-анимация ring-spin
+        var N = 18, html = "", k;
+        for (var f = 0; f < 2; f++) for (k = 0; k < N; k++) html += '<i class="f' + f + '" style="--i:' + k + ';--a:' + ((k + .5) * 180 / N - 90 + f * 180).toFixed(2) + '"></i>';
+        spinEl.innerHTML = html;
+        ["logo-text.png", "horeca-forum-2026-white.png", "cci-white.png"].forEach(function (n) { var im = new Image(); im.src = base + n; });
+        return null;
+      }
+      var cvs = doc.createElement("canvas"), g = null, U = {}, prog;
+      try { g = cvs.getContext("webgl", { alpha: true, premultipliedAlpha: true, antialias: false, powerPreference: "low-power" }); } catch (e) {}
+      if (!g) return buildStrips();
+      var FS = [
+        "precision highp float;",
+        "uniform vec2 uSize, uA, uB; uniform float uDpr, uR, uRot, uFull;",
+        "uniform sampler2D uText, uLogo, uCci;",
+        "const float PI = 3.14159265;",
+        // 1 внутри картинки, 0 снаружи и на кромке в пару пикселей: на самой границе сглаживание текстуры даёт светлую линию
+        "float inside(vec2 uv) { return step(.008, uv.x) * step(uv.x, .992) * step(.008, uv.y) * step(uv.y, .992); }",
+        "void main() {",
+        "  vec2 p = gl_FragCoord.xy / uDpr - uSize * .5; float x = p.x, y = -p.y;",
+        "  if (abs(x) >= uR) { gl_FragColor = vec4(0.); return; }",
+        "  float th = mod(asin(x / uR) - uRot + PI, 2. * PI) - PI;",        // угол точки на поверхности цилиндра
+        "  vec4 c = vec4(0.);",
+        "  if (abs(th) <= PI * .5) {",                                      // половина с логотипом форума
+        "    vec2 uv = vec2(th * uR / uA.x + .5, y / uA.y + .5);",
+        "    c = mix(texture2D(uText, uv), texture2D(uLogo, uv), uFull) * inside(uv);",
+        "  } else {",                                                       // половина с логотипом CCI
+        "    float t2 = th > 0. ? th - PI : th + PI; vec2 uv = vec2(t2 * uR / uB.x + .5, y / uB.y + .5);",
+        "    c = texture2D(uCci, uv) * inside(uv);",
+        "  }",
+        "  gl_FragColor = c * smoothstep(uR, uR - 2., abs(x));",
+        "}"
+      ].join("\n");
+      try {
+        var sh = function (type, src) { var s = g.createShader(type); g.shaderSource(s, src); g.compileShader(s); if (!g.getShaderParameter(s, g.COMPILE_STATUS)) throw new Error(g.getShaderInfoLog(s)); return s; };
+        prog = g.createProgram(); g.attachShader(prog, sh(g.VERTEX_SHADER, "attribute vec2 a; void main() { gl_Position = vec4(a, 0., 1.); }")); g.attachShader(prog, sh(g.FRAGMENT_SHADER, FS)); g.linkProgram(prog);
+        if (!g.getProgramParameter(prog, g.LINK_STATUS)) throw new Error(g.getProgramInfoLog(prog));
+        g.useProgram(prog);
+        var buf = g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER, buf); g.bufferData(g.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), g.STATIC_DRAW);
+        var loc = g.getAttribLocation(prog, "a"); g.enableVertexAttribArray(loc); g.vertexAttribPointer(loc, 2, g.FLOAT, false, 0, 0);
+        ["uSize", "uA", "uB", "uDpr", "uR", "uRot", "uFull", "uText", "uLogo", "uCci"].forEach(function (n) { U[n] = g.getUniformLocation(prog, n); });
+      } catch (e) { return buildStrips(); }
+      holder.innerHTML = ""; holder.appendChild(cvs); holder.classList.add("is-gl");
+
+      // текстуры: картинка растягивается до 1024×1024, чтобы работало сглаживание при уменьшении (mipmap)
+      var loaded = 0;
+      [["uText", "logo-text.png"], ["uLogo", "horeca-forum-2026-white.png"], ["uCci", "cci-white.png"]].forEach(function (d, unit) {
+        var tex = g.createTexture(), im = new Image();
+        g.activeTexture(g.TEXTURE0 + unit); g.bindTexture(g.TEXTURE_2D, tex);
+        g.texImage2D(g.TEXTURE_2D, 0, g.RGBA, 1, 1, 0, g.RGBA, g.UNSIGNED_BYTE, new Uint8Array(4)); g.uniform1i(U[d[0]], unit);
+        im.onload = function () {
+          var oc = doc.createElement("canvas"); oc.width = oc.height = 1024; oc.getContext("2d").drawImage(im, 0, 0, 1024, 1024);
+          g.activeTexture(g.TEXTURE0 + unit); g.bindTexture(g.TEXTURE_2D, tex); g.pixelStorei(g.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+          g.texImage2D(g.TEXTURE_2D, 0, g.RGBA, g.RGBA, g.UNSIGNED_BYTE, oc); g.generateMipmap(g.TEXTURE_2D);
+          g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MIN_FILTER, g.LINEAR_MIPMAP_LINEAR); g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MAG_FILTER, g.LINEAR);
+          g.texParameteri(g.TEXTURE_2D, g.TEXTURE_WRAP_S, g.CLAMP_TO_EDGE); g.texParameteri(g.TEXTURE_2D, g.TEXTURE_WRAP_T, g.CLAMP_TO_EDGE);
+          loaded++; draw();
+        };
+        im.src = base + d[1];
+      });
+
+      var mode = "hidden", t = 0, full = 0, running = false, last = 0, raf = 0, onScreen = true, W = 0, H = 0, dpr = 1;
+      var RK = parseFloat(getComputedStyle(logo).getPropertyValue("--rk")) || .4;
+      function size() {
+        var r = holder.getBoundingClientRect(); if (!r.width) return;
+        dpr = Math.min(window.devicePixelRatio || 1, 2); W = r.width; H = r.height;
+        var cwid = Math.round(W * dpr), chei = Math.round(H * dpr);
+        if (cvs.width !== cwid || cvs.height !== chei) { cvs.width = cwid; cvs.height = chei; g.viewport(0, 0, cwid, chei); }
+      }
+      function angle() {                   // градусы поворота; отрицательные — по часовой стрелке (вид сверху)
+        if (mode === "in") { var k = Math.min(1, t / 1.1); return 360 * Math.pow(1 - k, 3); }           // влёт: один оборот с торможением
+        if (mode === "rest") { var tau = t - 1.2, w = 24; if (tau <= 0) return 0; return tau < 2.5 ? -.5 * w * tau * tau / 2.5 : -30 - w * (tau - 2.5); }   // пауза, разгон, ровное вращение
+        return 0;
+      }
+      function draw() {
+        if (loaded < 3 || !W) return;
+        g.uniform2f(U.uSize, W, H); g.uniform1f(U.uDpr, dpr); g.uniform1f(U.uR, W * RK);
+        g.uniform2f(U.uA, W, H); g.uniform2f(U.uB, W * .94, W * .94 / 1.779);
+        g.uniform1f(U.uRot, angle() * Math.PI / 180); g.uniform1f(U.uFull, full);
+        g.clearColor(0, 0, 0, 0); g.clear(g.COLOR_BUFFER_BIT); g.drawArrays(g.TRIANGLE_STRIP, 0, 4);
+      }
+      var tick = 0;
+      function frame(now) {
+        raf = 0; if (!running) return;
+        t += Math.min((now - last) / 1000, .1) / SLOW; last = now; draw();
+        // влёт и разгон идут на полной частоте; ровное медленное вращение рисуется через кадр (около 30 раз в секунду) —
+        // на глаз то же самое, а страница вдвое реже пересобирает кадр
+        if (mode === "rest" && t > 3.7) { tick = setTimeout(function () { tick = 0; if (running) raf = requestAnimationFrame(frame); }, 18); }
+        else raf = requestAnimationFrame(frame);
+      }
+      function start() { if (running || mode === "hidden" || !onScreen || doc.hidden || reduced) return; running = true; last = performance.now(); raf = requestAnimationFrame(frame); }
+      function stop() { running = false; if (raf) { cancelAnimationFrame(raf); raf = 0; } if (tick) { clearTimeout(tick); tick = 0; } }
+      if ("IntersectionObserver" in window) new IntersectionObserver(function (es) { onScreen = es[0].isIntersecting; if (onScreen) start(); else stop(); }).observe(holder);
+      doc.addEventListener("visibilitychange", function () { if (doc.hidden) stop(); else start(); });
+      window.addEventListener("resize", function () { size(); draw(); });
+      return {
+        ortho: true,
+        spinIn: function () { mode = "in"; t = 0; full = 0; size(); draw(); start(); },
+        setFull: function () { full = 1; if (!running) draw(); },
+        rest: function () { mode = "rest"; t = 0; full = 1; size(); draw(); start(); },
+        hide: function () { mode = "hidden"; stop(); }
+      };
     })();
 
     /* ---------- Запуск ---------- */
@@ -479,7 +578,7 @@
       if (introDone) return; introDone = true;
       timers.forEach(clearTimeout); timers = []; logoBusy = false;
       hideCurtain(false); root.classList.add("stage-lit");
-      logo.className = "logo3d is-final"; burstCv.width = burstCv.width;
+      logo.className = "logo3d is-final"; burstCv.width = burstCv.width; if (ring) ring.rest();
       showRest(0); unbind();
     }
     var skipEvents = ["pointerdown", "keydown", "wheel", "touchstart"];
@@ -490,7 +589,7 @@
     if (reduced) { finish(); return; }
     if (seen && !force) {                // повторный заход: без занавеса, надпись делает оборот
       introDone = true; hideCurtain(false); root.classList.add("stage-lit"); showRest(0);
-      logo.className = "logo3d is-final"; return;
+      logo.className = "logo3d is-final"; if (ring) ring.rest(); return;
     }
     try { sessionStorage.setItem("curtainSeen", "1"); } catch (e) {}
     root.classList.add("curtain-closed"); sizeCurtain(); drawCurtain(0); curtain.classList.add("is-drawn");
