@@ -110,10 +110,12 @@
 
   /* ---- Спикеры + модалка ---- */
   var grid = $("#speakersGrid"), modal = $("#modal");
+  // шторки в рамке: две половины, раскрываются, когда блок появляется на экране (или открывается окно «Подробнее»)
+  var CURTAIN = '<span class="arch__curtain" aria-hidden="true"><i></i><i></i></span>';
   var arch = function (sp, cls, caption) {
     return sp.photo
-      ? '<div class="' + cls + '"><img src="' + esc(sp.photo) + '" alt="' + esc(sp.name) + '" loading="lazy"></div>'
-      : '<div class="' + cls + ' arch--empty"><b>' + esc(sp.initials || initials(sp.name)) + '</b><span class="eyebrow eyebrow--muted">' + esc(caption || "фото") + "</span></div>";
+      ? '<div class="' + cls + '"><img src="' + esc(sp.photo) + '" alt="' + esc(sp.name) + '" loading="lazy">' + CURTAIN + '</div>'
+      : '<div class="' + cls + ' arch--empty"><b>' + esc(sp.initials || initials(sp.name)) + '</b><span class="eyebrow">' + esc(caption || "фото") + "</span>" + CURTAIN + "</div>";
   };
   (D.speakers.items || []).forEach(function (sp, i) {
     var b = doc.createElement("button"); b.type = "button"; b.className = "speaker"; b.style.setProperty("--i", i);
@@ -144,7 +146,8 @@
     $("#modalTopic").textContent = sp.topic || sp.topicNote || "Тема уточняется"; $("#modalWhen").textContent = [sp.time, sp.stage].filter(Boolean).join(" · ");
     $("#modalBio").textContent = sp.bio || "";
     modal.hidden = false; doc.body.classList.add("modal-open");
-    requestAnimationFrame(function () { modal.classList.add("is-open"); $(".modal__close", modal).focus(); });
+    void modal.offsetWidth;        // браузер должен увидеть закрытое состояние, иначе окно и шторки появятся без движения
+    requestAnimationFrame(function () { requestAnimationFrame(function () { modal.classList.add("is-open"); $(".modal__close", modal).focus(); }); });
   }
   function closeModal() {
     modal.classList.remove("is-open"); doc.body.classList.remove("modal-open");
