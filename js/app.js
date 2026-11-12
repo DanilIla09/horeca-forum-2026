@@ -318,10 +318,10 @@
     function drawCurtain(t) {            // t — секунды от начала открытия (≤0 — закрыт)
       if (gl) {
         gl.uniform2f(glU.uRes, cw, ch); gl.uniform1f(glU.uT, t); gl.uniform1f(glU.uNow, performance.now() / 1000);
-        gl.uniform1f(glU.uN, cw < 640 ? 9 : 14); gl.uniform1f(glU.uWing, Math.max(16, Math.min(150, cw * .09))); gl.uniform1f(glU.uDpr, cdpr);
+        gl.uniform1f(glU.uN, cw < 640 ? 9 : 14); gl.uniform1f(glU.uWing, (cw <= 880 ? 2 : Math.max(16, Math.min(150, cw * .09)))); gl.uniform1f(glU.uDpr, cdpr);
         gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); return;
       }
-      var W = cw, H = ch, N = W < 640 ? 9 : 14, M = 20, wing = Math.max(16, Math.min(150, W * .09)), half = W / 2 + 1, minW = wing / N;
+      var W = cw, H = ch, N = W < 640 ? 9 : 14, M = 20, wing = W <= 880 ? 2 : Math.max(16, Math.min(150, W * .09)), half = W / 2 + 1, minW = wing / N;
       var DUR = 1.9, LAG = .34, j, m, y;
       ctx.clearRect(0, 0, W, H);
       // ведущая кромка: низ ткани отстаёт от верха, после остановки затухающе покачивается
