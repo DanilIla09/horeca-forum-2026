@@ -276,6 +276,8 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .arch__curtain i:first-child { left: 0; transform-origin: left center; border-right: 2px solid var(--gold-light); }
 .arch__curtain i:last-child { right: 0; transform-origin: right center; border-left: 2px solid var(--gold-light); }
 .in .arch__curtain i, .is-open .arch__curtain i { transform: scaleX(.17); }
+/* на телефоне рамка маленькая: шторки уходят полностью и не закрывают фото по бокам */
+@media (max-width: 880px) { .in .arch__curtain i, .is-open .arch__curtain i { transform: scaleX(0); } }
 .modal .arch__curtain i { transition-delay: .3s; }
 .arch--empty { display: grid; place-content: center; justify-items: center; gap: 6px; padding-top: 22%; background: url("../assets/speakers/stage-empty.jpg") center / cover; }
 .arch--empty .eyebrow { color: var(--gold-light); }
@@ -426,5 +428,6 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   .beam, .mote, .map__pin::after, .countdown__cell b.tick { animation: none; }
   .logo3d.is-final .ring3d__spin { animation: none; }
   .arch__curtain i { transition: none; transform: scaleX(.17); }
+  @media (max-width: 880px) { .arch__curtain i { transform: scaleX(0); } }
   .curtain { display: none; }
 }
