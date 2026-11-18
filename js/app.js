@@ -240,11 +240,13 @@
     var FRAG = [
       "precision highp float;",
       "uniform vec2 uRes; uniform float uT, uNow, uN, uKeep, uDpr, uNav, uSw;",
-      "const float DUR = 1.9; const float LAG = .30; const float YT = .60;",   // YT – высота подхвата (доля высоты экрана)
+      "const float DUR = 1.9; const float LAG = .30;",
+      "float YT;",                                    // высота подхвата (доля высоты экрана): на узком экране ниже, чтобы кисть висела под карточками даты и места
       "float hash(float n) { return fract(sin(n * 127.1) * 43758.5453); }",
       "float finalEdge(float yn, float r) {",         // внутренний край шторы в раскрытом виде: сверху широко, у подхвата узко, ниже чуть расходится
-      "  if (uKeep < .5) return -28.;",               // телефон: шторы уходят за край целиком
-      "  float top = min(uRes.x * .21, 340.), tie = min(uRes.x * .062, 96.), bot = min(uRes.x * .088, 136.);",
+      "  if (uKeep < .5) return -28.;",               // режим без штор по бокам: уходят за край целиком (сейчас не используется)
+      "  float wide = smoothstep(600., 1000., uRes.x);",                                   // на узком экране шторы тоньше, чтобы не закрывать логотип и карточки
+      "  float top = min(uRes.x * mix(.17, .21, wide), 340.), tie = min(uRes.x * mix(.042, .062, wide), 96.), bot = min(uRes.x * mix(.05, .088, wide), 136.);",
       "  float dy = sqrt((yn - YT) * (yn - YT) + r * r) - r;",   // r скругляет перегиб у подхвата: в движении плавная дуга, в конце узкая перетяжка
       "  if (yn < YT) return tie + (top - tie) * (1. - pow(max(1. - dy / YT, 0.), 2.6));",
       "  return tie + (bot - tie) * (1. - exp(-dy / .07));",
@@ -278,9 +280,10 @@
       "}",
       "void main() {",
       "  vec2 p = gl_FragCoord.xy / uDpr; float W = uRes.x, H = uRes.y; float y = H - p.y, yn = clamp(y / H, 0., 1.);",
+      "  float wideM = smoothstep(600., 1000., W); YT = mix(.715, .60, wideM);",
       "  float x = min(p.x, W - p.x);",               // правая штора – зеркало левой
       "  float xl = lead(yn), d = x - xl;",           // d > 0 – сцена, d < 0 – ткань
-      "  float sh = clamp(1. - (d - 2.) / 110., 0., 1.); float shadow = .34 * sh * sh * step(0., d);",
+      "  float sh = clamp(1. - (d - 2.) / clamp(W * .08, 34., 110.), 0., 1.); float shadow = .34 * sh * sh * step(0., d);",
       // боковая штора: складки сходятся к подхвату
       "  float u = clamp(x / max(xl, 1.), 0., 1.);",
       "  float j = uN * (u + .035 * sin(u * 9. + .7) + .02 * sin(u * 23. + 2.));",
@@ -292,7 +295,7 @@
       "  vec3 c = velvet(t);",
       // шнур подхвата и кисть: появляются, когда шторы встали на место
       "  float a = uKeep * clamp((uT - DUR - LAG) / .5, 0., 1.);",
-      "  float k = clamp(W / 1250., .9, 1.4);",
+      "  float k = clamp(W / 1250., .72, 1.4);",
       "  float xe = finalEdge(YT, .012), yt = YT * H;",
       "  float yr = yt - (xe - x) * .24, dr = abs(y - yr);",
       "  float rope = a * smoothstep(4.5 * k, 3.5 * k, dr) * step(x, xe + 3. * k);",
@@ -300,7 +303,7 @@
       "  float tw = .5 + .5 * sin((x * 1.1 + (y - yr) * 1.6) / k);",
       "  vec3 ropeC = mix(g1, g2, tw); ropeC = mix(ropeC, g3, smoothstep(.75, 1., tw) * (1. - dr / (4.5 * k)));",
       "  c *= 1. - .40 * a * exp(-dr * dr / (90. * k * k)) * step(x, xe + 3. * k);",
-      "  float x0 = xe - 1., ty = y - yt;",
+      "  float x0 = xe - mix(6., 1., wideM), ty = y - yt;",
       "  float cord = smoothstep(2.2 * k, 1.2 * k, abs(x - x0)) * step(0., ty) * step(ty, 24. * k);",
       "  float head = smoothstep(8.5 * k, 7.5 * k, length(vec2(x - x0, ty - 30. * k)));",
       "  float v = (ty - 38. * k) / (62. * k);",
@@ -357,13 +360,13 @@
       g.uniform1f(U.uNav, nav.offsetHeight || 64); g.uniform1f(U.uSw, w < 700 ? 2 : w < 1800 ? 4 : 6);
       g.clearColor(0, 0, 0, 0); g.clear(g.COLOR_BUFFER_BIT); g.drawArrays(g.TRIANGLE_STRIP, 0, 4);
     }
-    /* Неподвижные шторы первого экрана (шире 880px): шейдер рисует раскрытое состояние один раз на холсте вне страницы,
-       картинка копируется в #drapes. На телефоне штор по бокам нет – экран узкий, сцена открыта целиком. */
+    /* Неподвижные шторы первого экрана: шейдер рисует раскрытое состояние один раз на холсте вне страницы,
+       картинка копируется в #drapes. На узком экране шторы тоньше (см. finalEdge). */
     var drapes = $("#drapes"), stat = null;
     function drawDrapes() {
       if (!drapes) return;
       var w = hero.clientWidth, h = hero.clientHeight;
-      if (w <= 880 || !w || !h) { root.classList.remove("has-drapes"); return; }
+      if (!w || !h) return;
       if (stat === null) stat = makeGL(doc.createElement("canvas")) || false;
       if (!stat) return;
       var dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -381,7 +384,7 @@
       if (!gl) ctx.setTransform(cdpr, 0, 0, cdpr, 0, 0);
     }
     function drawCurtain(t) {            // t – секунды от начала открытия (≤0 – закрыт)
-      if (gl) { glDraw(gl, cw, ch, cdpr, t, cw > 880 ? 1 : 0); return; }
+      if (gl) { glDraw(gl, cw, ch, cdpr, t, 1); return; }
       // запасной путь без WebGL: плоские складки уходят к кулисам .wing
       var W = cw, H = ch, N = W < 640 ? 9 : 14, M = 20, wing = W <= 880 ? 2 : Math.max(16, Math.min(150, W * .09)), half = W / 2 + 1, minW = wing / N;
       var DUR = 1.9, LAG = .34, j, m, y;
