@@ -231,60 +231,112 @@
       curtain.classList.add("is-fading"); setTimeout(function () { curtain.classList.add("is-hidden"); }, 650);
     }
 
-    /* ---------- Занавес: складки ткани на canvas ---------- */
-    /* Основной путь – фрагментный шейдер: цвет каждого пикселя считается по формуле ткани, поэтому нет
-       ни ступенек, ни размытия, а нагрузка ложится на видеокарту. Если WebGL недоступен – 2D-отрисовка ниже. */
-    var ctx = null, gl = null, glU = null, cw = 0, ch = 0, cdpr = 1;
+    /* ---------- Занавес: бархатные шторы на canvas ---------- */
+    /* Шторы как на приглашении форума: бархат в неровных складках, сверху драпировка, по бокам подхват золотым шнуром с кистью.
+       Всё считает фрагментный шейдер: цвет каждого пикселя по формуле ткани, поэтому нет ни ступенек, ни размытия.
+       Тот же шейдер рисует и вступление (шторы расходятся), и неподвижные шторы первого экрана (drawDrapes ниже).
+       Если WebGL недоступен – упрощённая 2D-отрисовка ниже и плоские кулисы .wing из CSS. */
+    var ctx = null, gl = null, cw = 0, ch = 0, cdpr = 1;
     var FRAG = [
       "precision highp float;",
-      "uniform vec2 uRes; uniform float uT, uNow, uN, uWing, uDpr;",
-      "const float DUR = 1.9; const float LAG = .34;",
-      "float lead(float yn) {",                       // ведущая кромка: низ отстаёт от верха, потом затухающе качается
-      "  float lag = LAG * pow(yn, 1.4);",
+      "uniform vec2 uRes; uniform float uT, uNow, uN, uKeep, uDpr, uNav, uSw;",
+      "const float DUR = 1.9; const float LAG = .30; const float YT = .60;",   // YT – высота подхвата (доля высоты экрана)
+      "float hash(float n) { return fract(sin(n * 127.1) * 43758.5453); }",
+      "float finalEdge(float yn, float r) {",         // внутренний край шторы в раскрытом виде: сверху широко, у подхвата узко, ниже чуть расходится
+      "  if (uKeep < .5) return -28.;",               // телефон: шторы уходят за край целиком
+      "  float top = min(uRes.x * .21, 340.), tie = min(uRes.x * .062, 96.), bot = min(uRes.x * .088, 136.);",
+      "  float dy = sqrt((yn - YT) * (yn - YT) + r * r) - r;",   // r скругляет перегиб у подхвата: в движении плавная дуга, в конце узкая перетяжка
+      "  if (yn < YT) return tie + (top - tie) * (1. - pow(max(1. - dy / YT, 0.), 2.6));",
+      "  return tie + (bot - tie) * (1. - exp(-dy / .07));",
+      "}",
+      "float lead(float yn) {",                       // кромка в движении: первым уходит место подхвата, верх и низ догоняют, низ затухающе качается
+      "  float ld = (yn - YT) / YT; float lag = LAG * (1. - exp(-ld * ld * 3.5));",
       "  float k = clamp((uT - lag) / DUR, 0., 1.);",
       "  float e = k < .5 ? 4. * k * k * k : 1. - pow(-2. * k + 2., 3.) / 2.;",
       "  float after = uT - lag - DUR;",
-      "  float sway = after > 0. ? sin(after * 6.5) * exp(-after * 2.6) * 12. * yn : 0.;",
+      "  float low = clamp((yn - YT) / (1. - YT), 0., 1.);",
+      "  float sway = after > 0. ? sin(after * 6.5) * exp(-after * 2.6) * 9. * low : 0.;",
       "  float idle = uT <= 0. ? sin(uNow * 1.1 + yn * 9.) * 1.5 * yn : 0.;",
       "  float half_ = uRes.x * .5 + 1.;",
-      "  return half_ + (uWing - half_) * e + sway + idle;",
+      "  return half_ + (finalEdge(yn, mix(.14, .012, e * e)) - half_) * e + sway + idle;",
       "}",
-      "vec3 fold(float u) {",                         // объём одной складки: тень – свет – тень
-      "  vec3 dark = vec3(.47, .0, .02), mid = vec3(.84, .0, .04), hi = vec3(1., .22, .24);",
-      "  float a = 1. - abs(u - .5) * 2.;",           // 0 у краёв складки, 1 в гребне
-      "  vec3 c = mix(dark, mid, smoothstep(0., .55, a));",
-      "  return mix(c, hi, smoothstep(.5, 1., a));",
+      "float relief(float j) {",                      // рельеф ткани поперёк складок: гребни разной высоты и мелкая рябь
+      "  float w = .5 - .5 * cos(6.2832 * fract(j));",
+      "  return (1. - pow(max(1. - w, 0.), 1.6)) * (.78 + .22 * hash(floor(j))) + .07 * sin(12.566 * j + 1.3) + .03 * sin(18.85 * j + 4.1);",
+      "}",
+      "vec3 velvet(float t) {",                       // бархат: тень в складке → красный → блик на гребне
+      "  vec3 dark = vec3(.17, .008, .016), mid = vec3(.60, .035, .05), hi = vec3(.93, .19, .16);",
+      "  vec3 c = mix(dark, mid, clamp(t / .55, 0., 1.));",
+      "  return mix(c, hi, clamp((t - .55) / .45, 0., 1.));",
+      "}",
+      "float shade(float j) {",                       // освещённость точки на складке: свет сбоку-спереди, во впадинах темнее
+      "  float s = (relief(j + .012) - relief(j - .012)) / .024;",
+      "  float nx = -s * .42, inv = inversesqrt(nx * nx + 1.);",
+      "  float diff = clamp((nx * -.5 + .866) * inv, 0., 1.);",
+      "  float occ = clamp((relief(j) + .10) / 1.2, 0., 1.);",
+      "  return (.24 + .76 * pow(diff, 1.3)) * (.50 + .50 * occ) + .06 * clamp((diff - .9) / .1, 0., 1.) * occ * occ * occ;",
       "}",
       "void main() {",
-      "  vec2 p = gl_FragCoord.xy / uDpr; float y = uRes.y - p.y, yn = clamp(y / uRes.y, 0., 1.);",
-      "  float x = p.x; if (x > uRes.x * .5) x = uRes.x - x;",
-      "  float xl = lead(yn), half_ = uRes.x * .5 + 1., minW = uWing / uN;",
-      "  float d = x - xl;",                          // >0 – сцена, <0 – ткань
-      "  float shadow = .42 * (1. - clamp((d - 3.) / 90., 0., 1.)) * step(0., d);",
-      // обратная задача: какой складке принадлежит пиксель (часть складок сжимается равномерно, часть сгребается кромкой)
-      "  float jA = x * uN / (.45 * xl + .55 * half_);",
-      "  float jB = (x - .55 * (xl - uN * minW)) / (.45 * xl / uN + .55 * minW);",
-      "  float jf = max(jA, jB);",
-      "  vec3 c = fold(fract(jf));",
-      "  float v = yn < .14 ? .38 * (1. - yn / .14) : (yn > .62 ? .5 * (yn - .62) / .38 : 0.);",
-      "  c *= 1. - v;",                               // тень под карнизом и к полу
-      "  float hem = uRes.y - y;",                    // золотая отделка подола
-      "  c = mix(c, vec3(.79, .64, .15), .9 * smoothstep(8.5, 7.5, hem) * smoothstep(3.5, 4.5, hem));",
-      "  c = mix(c, vec3(.9, .78, .43), .5 * smoothstep(13.5, 13., hem) * smoothstep(11.5, 12., hem));",
-      "  float tw = uRes.x < 640. ? 2. : 3.;",        // золотая кайма по кромке
-      "  vec3 gold = mix(vec3(.95, .86, .58), vec3(.49, .38, .06), yn); gold = mix(gold, vec3(.79, .64, .15), 1. - abs(yn - .5) * 2.);",
-      "  float trim = smoothstep(tw + .75, tw - .25, abs(d));",
-      "  float cloth = smoothstep(.75, -.75, d);",    // сглаженный край ткани
-      "  vec4 col = vec4(c * cloth, cloth);",
-      "  col = mix(vec4(0., 0., 0., shadow), col, cloth);",
-      "  col = mix(col, vec4(gold, 1.), trim);",
+      "  vec2 p = gl_FragCoord.xy / uDpr; float W = uRes.x, H = uRes.y; float y = H - p.y, yn = clamp(y / H, 0., 1.);",
+      "  float x = min(p.x, W - p.x);",               // правая штора – зеркало левой
+      "  float xl = lead(yn), d = x - xl;",           // d > 0 – сцена, d < 0 – ткань
+      "  float sh = clamp(1. - (d - 2.) / 110., 0., 1.); float shadow = .34 * sh * sh * step(0., d);",
+      // боковая штора: складки сходятся к подхвату
+      "  float u = clamp(x / max(xl, 1.), 0., 1.);",
+      "  float j = uN * (u + .035 * sin(u * 9. + .7) + .02 * sin(u * 23. + 2.));",
+      "  float t = mix(.30, shade(j), smoothstep(1.5, 7., max(xl, 1.) / uN));",
+      "  t *= .74 + .26 * smoothstep(0., 12., -d);",  // у кромки ткань заворачивается и темнеет
+      "  t *= 1. - (yn < .16 ? .30 * (1. - yn / .16) : 0.) - (yn > .7 ? .35 * (yn - .7) / .3 : 0.);",
+      "  float gather = uKeep * clamp(1. - xl / (W * .25), 0., 1.);",
+      "  float gy = (yn - YT) / .05; t *= 1. - .30 * gather * exp(-gy * gy);",
+      "  vec3 c = velvet(t);",
+      // шнур подхвата и кисть: появляются, когда шторы встали на место
+      "  float a = uKeep * clamp((uT - DUR - LAG) / .5, 0., 1.);",
+      "  float k = clamp(W / 1250., .9, 1.4);",
+      "  float xe = finalEdge(YT, .012), yt = YT * H;",
+      "  float yr = yt - (xe - x) * .24, dr = abs(y - yr);",
+      "  float rope = a * smoothstep(4.5 * k, 3.5 * k, dr) * step(x, xe + 3. * k);",
+      "  vec3 g1 = vec3(.50, .35, .10), g2 = vec3(.82, .64, .27), g3 = vec3(.97, .86, .55);",
+      "  float tw = .5 + .5 * sin((x * 1.1 + (y - yr) * 1.6) / k);",
+      "  vec3 ropeC = mix(g1, g2, tw); ropeC = mix(ropeC, g3, smoothstep(.75, 1., tw) * (1. - dr / (4.5 * k)));",
+      "  c *= 1. - .40 * a * exp(-dr * dr / (90. * k * k)) * step(x, xe + 3. * k);",
+      "  float x0 = xe - 1., ty = y - yt;",
+      "  float cord = smoothstep(2.2 * k, 1.2 * k, abs(x - x0)) * step(0., ty) * step(ty, 24. * k);",
+      "  float head = smoothstep(8.5 * k, 7.5 * k, length(vec2(x - x0, ty - 30. * k)));",
+      "  float v = (ty - 38. * k) / (62. * k);",
+      "  float hw = (6.5 + 6.5 * clamp(v, 0., 1.)) * k;",
+      "  float skirt = smoothstep(hw + .75, hw - .75, abs(x - x0)) * step(0., v) * smoothstep(1., .97, v + .02 * sin(x * 2.6));",
+      "  float tas = a * max(cord, max(head, skirt));",
+      "  float cyl = 1. - .55 * pow(clamp(abs(x - x0) / max(hw, 1.), 0., 1.), 2.);",
+      "  float thr = .65 + .35 * sin((x - x0) * 2.6 / k + sin(ty * .05) * 1.5);",
+      "  vec3 tasC = mix(g1, g2, cyl * (skirt > head ? thr : 1.));",
+      "  tasC = mix(tasC, g3, .35 * cyl * smoothstep(-2., -6., (x - x0) / k));",
+      "  tasC *= 1. - .45 * smoothstep(34. * k, 38. * k, ty) * smoothstep(44. * k, 40. * k, ty);",
+      // драпировка сверху: полукружия ткани между точками сборки, складки повторяют провис
+      "  float P = W / uSw, q = fract(p.x / P), tl = min(q, 1. - q) * 2.;",   // tl: 0 – середина полукружия, 1 – точка сборки
+      "  float Dc = uNav + clamp(H * .11, 64., 110.);",
+      "  float lift = uKeep < .5 ? (Dc + 44.) * pow(clamp((uT - .9) / 1.2, 0., 1.), 2.) : 0.;",   // телефон: драпировка уезжает вверх
+      "  float ys = y + lift, D = Dc * (.16 + .84 * pow(max(1. - tl * tl, 0.), .8)), s = ys / D;",
+      "  float js = 4.6 * pow(clamp(s, 0., 1.), 1.25);",
+      "  float ts = mix(.30, shade(js), smoothstep(1.5, 6., D / 4.6));",
+      "  ts *= (.80 + .20 * (1. - tl)) * (.72 + .28 * smoothstep(0., .3, s)) * (1. - .35 * smoothstep(.7, 1., tl));",
+      "  ts = mix(ts, ts * 1.25 + .05, smoothstep(.90, .97, s));",
+      "  float swag = smoothstep(.75, -.75, ys - D);",
+      "  float sws = .5 * pow(clamp(1. - (ys - D) / 34., 0., 1.), 2.) * step(D, ys);",
+      // сборка слоёв (цвет с предумноженной прозрачностью): тень на сцене → штора → шнур → кисть → тень драпировки → драпировка
+      "  float cloth = smoothstep(.75, -.75, d);",
+      "  vec4 col = mix(vec4(0., 0., 0., shadow), vec4(c, 1.), cloth);",
+      "  col = mix(col, vec4(ropeC, 1.), rope);",
+      "  col = mix(col, vec4(tasC, 1.), tas);",
+      "  col = vec4(col.rgb * (1. - sws), col.a + (1. - col.a) * sws);",
+      "  col = mix(col, vec4(velvet(ts), 1.), swag);",
       "  gl_FragColor = col;",
       "}"
     ].join("\n");
-    function initGL() {
+    function makeGL(canvas) {            // WebGL-контекст с программой штор на данном холсте; null, если WebGL недоступен
       try {
-        var g = cv.getContext("webgl", { alpha: true, premultipliedAlpha: true, antialias: false, powerPreference: "low-power" });
-        if (!g) return false;
+        var g = canvas.getContext("webgl", { alpha: true, premultipliedAlpha: true, antialias: false, powerPreference: "low-power" });
+        if (!g) return null;
         var sh = function (type, src) { var s = g.createShader(type); g.shaderSource(s, src); g.compileShader(s); if (!g.getShaderParameter(s, g.COMPILE_STATUS)) throw new Error(g.getShaderInfoLog(s)); return s; };
         var prog = g.createProgram();
         g.attachShader(prog, sh(g.VERTEX_SHADER, "attribute vec2 a; void main() { gl_Position = vec4(a, 0., 1.); }"));
@@ -293,22 +345,44 @@
         g.useProgram(prog);
         var buf = g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER, buf); g.bufferData(g.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), g.STATIC_DRAW);
         var loc = g.getAttribLocation(prog, "a"); g.enableVertexAttribArray(loc); g.vertexAttribPointer(loc, 2, g.FLOAT, false, 0, 0);
-        glU = {}; ["uRes", "uT", "uNow", "uN", "uWing", "uDpr"].forEach(function (n) { glU[n] = g.getUniformLocation(prog, n); });
-        gl = g; return true;
-      } catch (e) { gl = null; return false; }
+        var U = {}; ["uRes", "uT", "uNow", "uN", "uKeep", "uDpr", "uNav", "uSw"].forEach(function (n) { U[n] = g.getUniformLocation(prog, n); });
+        return { g: g, U: U, cv: canvas };
+      } catch (e) { return null; }
+    }
+    function glDraw(o, w, h, dpr, t, keep) {   // t – секунды от начала открытия (≤0 – закрыт, большое число – раскрыт); keep=1 – шторы остаются по бокам
+      var g = o.g, U = o.U;
+      g.viewport(0, 0, o.cv.width, o.cv.height);
+      g.uniform2f(U.uRes, w, h); g.uniform1f(U.uT, t); g.uniform1f(U.uNow, performance.now() / 1000);
+      g.uniform1f(U.uN, w < 640 ? 5 : 8); g.uniform1f(U.uKeep, keep); g.uniform1f(U.uDpr, dpr);
+      g.uniform1f(U.uNav, nav.offsetHeight || 64); g.uniform1f(U.uSw, w < 700 ? 2 : w < 1800 ? 4 : 6);
+      g.clearColor(0, 0, 0, 0); g.clear(g.COLOR_BUFFER_BIT); g.drawArrays(g.TRIANGLE_STRIP, 0, 4);
+    }
+    /* Неподвижные шторы первого экрана (шире 880px): шейдер рисует раскрытое состояние один раз на холсте вне страницы,
+       картинка копируется в #drapes. На телефоне штор по бокам нет – экран узкий, сцена открыта целиком. */
+    var drapes = $("#drapes"), stat = null;
+    function drawDrapes() {
+      if (!drapes) return;
+      var w = hero.clientWidth, h = hero.clientHeight;
+      if (w <= 880 || !w || !h) { root.classList.remove("has-drapes"); return; }
+      if (stat === null) stat = makeGL(doc.createElement("canvas")) || false;
+      if (!stat) return;
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      stat.cv.width = Math.round(w * dpr); stat.cv.height = Math.round(h * dpr);
+      glDraw(stat, w, h, dpr, 99, 1);
+      drapes.width = stat.cv.width; drapes.height = stat.cv.height;
+      drapes.getContext("2d").drawImage(stat.cv, 0, 0);
+      stat.cv.width = stat.cv.height = 1;      // большой буфер больше не нужен: картинка уже в #drapes
+      root.classList.add("has-drapes");
     }
     function sizeCurtain() {
-      if (!gl && !ctx && !initGL()) ctx = cv.getContext("2d");
+      if (!gl && !ctx && !(gl = makeGL(cv))) ctx = cv.getContext("2d");
       cdpr = Math.min(window.devicePixelRatio || 1, gl ? 2 : 1.5); cw = window.innerWidth; ch = window.innerHeight;
       cv.width = Math.round(cw * cdpr); cv.height = Math.round(ch * cdpr);
-      if (gl) gl.viewport(0, 0, cv.width, cv.height); else ctx.setTransform(cdpr, 0, 0, cdpr, 0, 0);
+      if (!gl) ctx.setTransform(cdpr, 0, 0, cdpr, 0, 0);
     }
     function drawCurtain(t) {            // t – секунды от начала открытия (≤0 – закрыт)
-      if (gl) {
-        gl.uniform2f(glU.uRes, cw, ch); gl.uniform1f(glU.uT, t); gl.uniform1f(glU.uNow, performance.now() / 1000);
-        gl.uniform1f(glU.uN, cw < 640 ? 9 : 14); gl.uniform1f(glU.uWing, (cw <= 880 ? 2 : Math.max(16, Math.min(150, cw * .09)))); gl.uniform1f(glU.uDpr, cdpr);
-        gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); return;
-      }
+      if (gl) { glDraw(gl, cw, ch, cdpr, t, cw > 880 ? 1 : 0); return; }
+      // запасной путь без WebGL: плоские складки уходят к кулисам .wing
       var W = cw, H = ch, N = W < 640 ? 9 : 14, M = 20, wing = W <= 880 ? 2 : Math.max(16, Math.min(150, W * .09)), half = W / 2 + 1, minW = wing / N;
       var DUR = 1.9, LAG = .34, j, m, y;
       ctx.clearRect(0, 0, W, H);
@@ -329,7 +403,7 @@
         // каждая складка – столбик из M трапеций со своим градиентом, чтобы объём шёл за изгибом ткани
         for (j = 0; j < N; j++) for (m = 0; m < M; m++) {
           var xa = (E[j][m] + E[j][m + 1]) / 2, xb = (E[j + 1][m] + E[j + 1][m + 1]) / 2, g = ctx.createLinearGradient(xa, 0, Math.max(xb, xa + .5), 0);
-          g.addColorStop(0, "#7a0006"); g.addColorStop(.28, "#cf000b"); g.addColorStop(.5, "#ff3a40"); g.addColorStop(.72, "#cf000b"); g.addColorStop(1, "#700006");
+          g.addColorStop(0, "#3a0306"); g.addColorStop(.28, "#99090d"); g.addColorStop(.5, "#e22b28"); g.addColorStop(.72, "#99090d"); g.addColorStop(1, "#330205");
           ctx.beginPath(); ctx.moveTo(E[j][m], H * m / M); ctx.lineTo(E[j + 1][m] + .6, H * m / M);
           ctx.lineTo(E[j + 1][m + 1] + .6, H * (m + 1) / M + .6); ctx.lineTo(E[j][m + 1], H * (m + 1) / M + .6);
           ctx.closePath(); ctx.fillStyle = g; ctx.fill();
@@ -341,11 +415,6 @@
         var vg = ctx.createLinearGradient(0, 0, 0, H);
         vg.addColorStop(0, "rgba(0,0,0,.38)"); vg.addColorStop(.14, "rgba(0,0,0,0)"); vg.addColorStop(.62, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,.5)");
         ctx.fillStyle = vg; ctx.fill();
-        // золотая кайма по кромке и по подолу
-        var gg = ctx.createLinearGradient(0, 0, 0, H); gg.addColorStop(0, "#f3dc94"); gg.addColorStop(.5, "#C9A227"); gg.addColorStop(1, "#7d620f");
-        ctx.beginPath(); ctx.moveTo(lead[0], 0); for (m = 1; m <= M; m++) ctx.lineTo(lead[m], H * m / M);
-        ctx.strokeStyle = gg; ctx.lineWidth = W < 640 ? 4 : 6; ctx.stroke();
-        ctx.fillStyle = "rgba(201,162,39,.9)"; ctx.fillRect(0, H - 7, lead[M], 3); ctx.fillStyle = "rgba(230,199,110,.5)"; ctx.fillRect(0, H - 13, lead[M], 1.5);
         // тень от кромки на сцену
         var sx = lead[M >> 1], sg = ctx.createLinearGradient(sx, 0, sx + 90, 0); sg.addColorStop(0, "rgba(0,0,0,.42)"); sg.addColorStop(1, "rgba(0,0,0,0)");
         ctx.beginPath(); ctx.moveTo(lead[0] + 3, 0); for (m = 1; m <= M; m++) ctx.lineTo(lead[m] + 3, H * m / M);
@@ -563,6 +632,9 @@
     var skipEvents = ["pointerdown", "keydown", "wheel", "touchstart"];
     function unbind() { skipEvents.forEach(function (ev) { window.removeEventListener(ev, finish); }); }
 
+    var drapesTimer = 0;
+    drawDrapes(); window.addEventListener("load", drawDrapes);
+    window.addEventListener("resize", function () { clearTimeout(drapesTimer); drapesTimer = setTimeout(drawDrapes, 150); });
     var seen = false, force = /\bintro=1\b/.test(location.search);
     try { seen = sessionStorage.getItem("curtainSeen") === "1"; } catch (e) {}
     if (reduced) { finish(); return; }
@@ -574,10 +646,12 @@
     root.classList.add("curtain-closed"); sizeCurtain(); drawCurtain(0); curtain.classList.add("is-drawn");
     window.addEventListener("resize", sizeCurtain);
     skipEvents.forEach(function (ev) { window.addEventListener(ev, finish, { passive: true }); });
-    var start = performance.now(), curtainLive = true;
+    var start = performance.now(), curtainLive = true, FIXT = parseFloat((location.search.match(/[?&]ct=([\d.]+)/) || [])[1]);
     (function loop(now) {
       if (!curtainLive || introDone) return;
-      var t = (((now || performance.now()) - start) / SLOW - T_OPEN) / 1000; drawCurtain(t);
+      var t = (((now || performance.now()) - start) / SLOW - T_OPEN) / 1000;
+      if (!isNaN(FIXT)) { drawCurtain(FIXT); requestAnimationFrame(loop); return; }   // отладка: ?intro=1&ct=1.2 – занавес стоит на 1,2-й секунде раскрытия
+      drawCurtain(t);
       if (t > 3.1) { curtainLive = false; hideCurtain(true); return; }
       requestAnimationFrame(loop);
     })();
