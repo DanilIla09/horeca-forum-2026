@@ -39,7 +39,7 @@ window.EVENT_DATA = {
       { time: "11:15", title: "Оперное выступление № 1: «Libiamo ne’ lieti calici»" },
       { time: "11:20", title: "Толга Гёмеч – директор по международному бизнесу в регионе AMEA, Domino’s Pizza" },
       { time: "12:00", title: "«Танец снежинок» (Вальс снежинок из балета «Щелкунчик»)" },
-      { time: "12:05", title: "Обед", isBreak: true },
+      { time: "12:00", title: "Обед", isBreak: true },
       { time: "13:05", title: "Торжественное открытие второй части программы" },
       { time: "13:10", title: "Тарлан Усейнов – IMX директор, The Coca-Cola Company", meta: "Тема: «Новая медиасреда»" },
       { time: "13:35", title: "Адажио из балета «Щелкунчик»" },
