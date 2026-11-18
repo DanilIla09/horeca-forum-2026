@@ -1,4 +1,4 @@
-/* HoReCa Forum 2026 — логика и анимации. Данные: data/event.js (window.EVENT_DATA). */
+/* HoReCa Forum 2026 – логика и анимации. Данные: data/event.js (window.EVENT_DATA). */
 (function () {
   "use strict";
   var D = window.EVENT_DATA || {};
@@ -21,7 +21,7 @@
   $("#menuEyebrow").textContent = D.menu.eyebrow; $("#menuTeaser").textContent = D.menu.teaser || "";
   $("#venueEyebrow").textContent = D.venue.eyebrow; $("#orgLabel").textContent = D.footer.organizerLabel; $("#copyright").textContent = D.footer.copyright;
 
-  /* ---- Заголовок hero: слова появляются по очереди, {слово} — золотым курсивом ---- */
+  /* ---- Заголовок hero: слова появляются по очереди, {слово} – золотым курсивом ---- */
   (function () {
     var h = $("#heroTitle"), idx = 0;
     (D.heroTitle || []).forEach(function (line, li) {
@@ -244,8 +244,8 @@
     }
 
     /* ---------- Занавес: складки ткани на canvas ---------- */
-    /* Основной путь — фрагментный шейдер: цвет каждого пикселя считается по формуле ткани, поэтому нет
-       ни ступенек, ни размытия, а нагрузка ложится на видеокарту. Если WebGL недоступен — 2D-отрисовка ниже. */
+    /* Основной путь – фрагментный шейдер: цвет каждого пикселя считается по формуле ткани, поэтому нет
+       ни ступенек, ни размытия, а нагрузка ложится на видеокарту. Если WebGL недоступен – 2D-отрисовка ниже. */
     var ctx = null, gl = null, glU = null, cw = 0, ch = 0, cdpr = 1;
     var FRAG = [
       "precision highp float;",
@@ -261,7 +261,7 @@
       "  float half_ = uRes.x * .5 + 1.;",
       "  return half_ + (uWing - half_) * e + sway + idle;",
       "}",
-      "vec3 fold(float u) {",                         // объём одной складки: тень — свет — тень
+      "vec3 fold(float u) {",                         // объём одной складки: тень – свет – тень
       "  vec3 dark = vec3(.47, .0, .02), mid = vec3(.84, .0, .04), hi = vec3(1., .22, .24);",
       "  float a = 1. - abs(u - .5) * 2.;",           // 0 у краёв складки, 1 в гребне
       "  vec3 c = mix(dark, mid, smoothstep(0., .55, a));",
@@ -271,7 +271,7 @@
       "  vec2 p = gl_FragCoord.xy / uDpr; float y = uRes.y - p.y, yn = clamp(y / uRes.y, 0., 1.);",
       "  float x = p.x; if (x > uRes.x * .5) x = uRes.x - x;",
       "  float xl = lead(yn), half_ = uRes.x * .5 + 1., minW = uWing / uN;",
-      "  float d = x - xl;",                          // >0 — сцена, <0 — ткань
+      "  float d = x - xl;",                          // >0 – сцена, <0 – ткань
       "  float shadow = .42 * (1. - clamp((d - 3.) / 90., 0., 1.)) * step(0., d);",
       // обратная задача: какой складке принадлежит пиксель (часть складок сжимается равномерно, часть сгребается кромкой)
       "  float jA = x * uN / (.45 * xl + .55 * half_);",
@@ -315,7 +315,7 @@
       cv.width = Math.round(cw * cdpr); cv.height = Math.round(ch * cdpr);
       if (gl) gl.viewport(0, 0, cv.width, cv.height); else ctx.setTransform(cdpr, 0, 0, cdpr, 0, 0);
     }
-    function drawCurtain(t) {            // t — секунды от начала открытия (≤0 — закрыт)
+    function drawCurtain(t) {            // t – секунды от начала открытия (≤0 – закрыт)
       if (gl) {
         gl.uniform2f(glU.uRes, cw, ch); gl.uniform1f(glU.uT, t); gl.uniform1f(glU.uNow, performance.now() / 1000);
         gl.uniform1f(glU.uN, cw < 640 ? 9 : 14); gl.uniform1f(glU.uWing, (cw <= 880 ? 2 : Math.max(16, Math.min(150, cw * .09)))); gl.uniform1f(glU.uDpr, cdpr);
@@ -338,7 +338,7 @@
       for (j = 0; j <= N; j++) { E.push([]); for (m = 0; m <= M; m++) { var xl = lead[m], uni = j / N * xl, push = Math.min(j / N * half, xl - (N - j) * minW); E[j].push(uni * .45 + push * .55); } }
       for (var side = 0; side < 2; side++) {
         ctx.save(); if (side) { ctx.translate(W, 0); ctx.scale(-1, 1); }
-        // каждая складка — столбик из M трапеций со своим градиентом, чтобы объём шёл за изгибом ткани
+        // каждая складка – столбик из M трапеций со своим градиентом, чтобы объём шёл за изгибом ткани
         for (j = 0; j < N; j++) for (m = 0; m < M; m++) {
           var xa = (E[j][m] + E[j][m + 1]) / 2, xb = (E[j + 1][m] + E[j + 1][m + 1]) / 2, g = ctx.createLinearGradient(xa, 0, Math.max(xb, xa + .5), 0);
           g.addColorStop(0, "#7a0006"); g.addColorStop(.28, "#cf000b"); g.addColorStop(.5, "#ff3a40"); g.addColorStop(.72, "#cf000b"); g.addColorStop(1, "#700006");
@@ -368,7 +368,7 @@
 
     /* ---------- Частицы: бутылка разлетается и собирается на месте ---------- */
     var pts = null;
-    function samplePoints() {            // точки силуэта бутылки (u, v — доли холста логотипа)
+    function samplePoints() {            // точки силуэта бутылки (u, v – доли холста логотипа)
       if (pts) return pts;
       if (!bottleImg.complete || !bottleImg.naturalWidth) return [];
       try {
@@ -455,13 +455,13 @@
       }, chargeMs + 150);
     }
     logo.addEventListener("click", function () { if (!introDone || reduced) return; playLogo(700); });
-    /* Цилиндр с логотипами. Основной путь — один WebGL-холст: фрагментный шейдер для каждого пикселя находит точку
-       на поверхности цилиндра и берёт цвет из текстуры логотипа (половина окружности — форум, вторая — CCI).
-       Это один слой вместо 36, поэтому вращение почти ничего не стоит. Без WebGL — запасной вариант на CSS-полосах. */
+    /* Цилиндр с логотипами. Основной путь – один WebGL-холст: фрагментный шейдер для каждого пикселя находит точку
+       на поверхности цилиндра и берёт цвет из текстуры логотипа (половина окружности – форум, вторая – CCI).
+       Это один слой вместо 36, поэтому вращение почти ничего не стоит. Без WebGL – запасной вариант на CSS-полосах. */
     var ring = (function () {
       var holder = $(".ring3d"), spinEl = $("#ringSpin");
       var base = bottleImg.src.replace(/[^/]+$/, "");
-      function buildStrips() {             // запасной путь: 36 прозрачных полос, вращение — CSS-анимация ring-spin
+      function buildStrips() {             // запасной путь: 36 прозрачных полос, вращение – CSS-анимация ring-spin
         var N = 18, html = "", k;
         for (var f = 0; f < 2; f++) for (k = 0; k < N; k++) html += '<i class="f' + f + '" style="--i:' + k + ';--a:' + ((k + .5) * 180 / N - 90 + f * 180).toFixed(2) + '"></i>';
         spinEl.innerHTML = html;
@@ -529,7 +529,7 @@
         var cwid = Math.round(W * dpr), chei = Math.round(H * dpr);
         if (cvs.width !== cwid || cvs.height !== chei) { cvs.width = cwid; cvs.height = chei; g.viewport(0, 0, cwid, chei); }
       }
-      function angle() {                   // градусы поворота; отрицательные — по часовой стрелке (вид сверху)
+      function angle() {                   // градусы поворота; отрицательные – по часовой стрелке (вид сверху)
         if (mode === "in") { var k = Math.min(1, t / 1.1); return 360 * Math.pow(1 - k, 3); }           // влёт: один оборот с торможением
         if (mode === "rest") { var tau = t - 1.2, w = 24; if (tau <= 0) return 0; return tau < 2.5 ? -.5 * w * tau * tau / 2.5 : -30 - w * (tau - 2.5); }   // пауза, разгон, ровное вращение
         return 0;
@@ -545,7 +545,7 @@
       function frame(now) {
         raf = 0; if (!running) return;
         t += Math.min((now - last) / 1000, .1) / SLOW; last = now; draw();
-        // влёт и разгон идут на полной частоте; ровное медленное вращение рисуется через кадр (около 30 раз в секунду) —
+        // влёт и разгон идут на полной частоте; ровное медленное вращение рисуется через кадр (около 30 раз в секунду) –
         // на глаз то же самое, а страница вдвое реже пересобирает кадр
         if (mode === "rest" && t > 3.7) { tick = setTimeout(function () { tick = 0; if (running) raf = requestAnimationFrame(frame); }, 18); }
         else raf = requestAnimationFrame(frame);

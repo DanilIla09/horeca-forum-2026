@@ -1,9 +1,9 @@
-/* Coca-Cola HoReCa Forum 2026 — стили.
-   Шрифт: фирменная Helvetica от организаторов (Regular + Bold, файлы в assets/fonts, латиница + кириллица) — на всём сайте.
-   woff2 для современных браузеров, woff — запасной формат. Если файл шрифта у гостя не загрузится, Windows подставит Arial, а macOS/iOS — системную Helvetica.
+/* Coca-Cola HoReCa Forum 2026 – стили.
+   Шрифт: фирменная Helvetica от организаторов (Regular + Bold, файлы в assets/fonts, латиница + кириллица) – на всём сайте.
+   woff2 для современных браузеров, woff – запасной формат. Если файл шрифта у гостя не загрузится, Windows подставит Arial, а macOS/iOS – системную Helvetica.
    Начертаний два, поэтому жирность только 400 и 700. Заголовок целиком одной жирности.
-   Цвет (комментарий клиента 18.11): красный Coca-Cola как в логотипе (#F40009) вместо бордо; айвори для текстовых блоков, золото — тонкие линии.
-   На красном мелкий текст белый (золотой на ярком красном плохо читается), светлое золото — для линий и крупных цифр. */
+   Цвет (комментарий клиента 18.11): красный Coca-Cola как в логотипе (#F40009) вместо бордо; айвори для текстовых блоков, золото – тонкие линии.
+   На красном мелкий текст белый (золотой на ярком красном плохо читается), светлое золото – для линий и крупных цифр. */
 @font-face { font-family: 'HF Helvetica'; src: url("../assets/fonts/helvetica-regular.woff2") format("woff2"), url("../assets/fonts/helvetica-regular.woff") format("woff"); font-weight: 400; font-style: normal; font-display: swap; }
 @font-face { font-family: 'HF Helvetica'; src: url("../assets/fonts/helvetica-bold.woff2") format("woff2"), url("../assets/fonts/helvetica-bold.woff") format("woff"); font-weight: 700; font-style: normal; font-display: swap; }
 :root {
@@ -18,7 +18,7 @@
   --ease-curtain: cubic-bezier(.7, 0, .2, 1); --ease: cubic-bezier(.22, .61, .36, 1); --dur-curtain: 1.4s; --dur-hover: .2s;
   color-scheme: light;
 }
-/* На красных поверхностях линии светло-золотые; на айвори-карточках внутри них — обычное золото. */
+/* На красных поверхностях линии светло-золотые; на айвори-карточках внутри них – обычное золото. */
 .hero, .nav, .section--red, .poster, .menupage, .footer { --gold: var(--gold-light); --line-gold: 1px solid var(--gold-light); }
 .speaker, .menucard, .modal__card, .venue__map, .scheme__open { --gold: #C9A227; --line-gold: 1px solid #C9A227; }
 *, *::before, *::after { box-sizing: border-box; }
@@ -78,7 +78,7 @@ section[id] { scroll-margin-top: var(--nav-h); }
 .btn--outline:hover { background: rgba(255,255,255,.14); }
 .btn:active { transform: translateY(1px); }
 
-/* ===== Занавес: ткань рисуется на canvas (js/app.js), карниз и ламбрекен — поверх ===== */
+/* ===== Занавес: ткань рисуется на canvas (js/app.js), карниз и ламбрекен – поверх ===== */
 .curtain { position: fixed; inset: 0; z-index: 200; pointer-events: none; overflow: hidden; display: none; transition: opacity .6s ease; }
 .js .curtain { display: block; }
 .curtain.is-fading { opacity: 0; }
@@ -154,8 +154,8 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .wing--r { right: 0; }
 .hero__inner { position: relative; z-index: 3; display: grid; justify-items: center; gap: 22px; width: 100%; max-width: 760px; }
 /* Логотип. Состояния ставит js: is-charging → is-burst → is-ring-in → is-bottle → is-final. */
-/* --lw — ширина логотипа на поверхности цилиндра, --rk — радиус цилиндра в долях этой ширины.
-   Чем меньше --rk, тем большую часть окружности занимает логотип (при .4 — около 143° из 180°) и тем меньше разрыв между логотипами.
+/* --lw – ширина логотипа на поверхности цилиндра, --rk – радиус цилиндра в долях этой ширины.
+   Чем меньше --rk, тем большую часть окружности занимает логотип (при .4 – около 143° из 180°) и тем меньше разрыв между логотипами.
    Цилиндр невидим: есть только логотипы, изогнутые по его поверхности. */
 .logo3d { --S: 1.9; --lw: min(76vw, 410px); --rk: .4; --R: calc(var(--lw) * var(--rk)); --n: 18; --arc: calc(var(--R) * 3.14159); --w: calc(var(--arc) / var(--n)); --H: calc(var(--lw) / 1.106);
   position: relative; z-index: 2; display: block; width: var(--lw); aspect-ratio: 1200 / 1085; max-width: 100%; padding: 0; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
