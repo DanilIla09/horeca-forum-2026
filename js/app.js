@@ -1,6 +1,16 @@
 /* HoReCa Forum 2026 — логика и анимации. Данные: data/event.js (window.EVENT_DATA). */
 (function () {
   "use strict";
+  /* Варианты шрифта для показа клиенту: ?font=2 — заголовки Playfair Display, ?font=3 — Montserrat, ?font=1 — основной (Manrope).
+     Выбор держится до закрытия вкладки, чтобы страница меню открывалась тем же шрифтом. */
+  (function () {
+    var m = /[?&]font=([123])/.exec(location.search), f = m && m[1];
+    try { if (f) sessionStorage.setItem("font", f); else f = sessionStorage.getItem("font"); } catch (e) {}
+    var fam = { "2": "Playfair+Display:wght@500;600;700;800", "3": "Montserrat:wght@400;500;600;700;800" }[f];
+    if (!fam) return;
+    var l = document.createElement("link"); l.rel = "stylesheet"; l.href = "https://fonts.googleapis.com/css2?family=" + fam + "&display=swap";
+    document.head.appendChild(l); document.documentElement.setAttribute("data-font", f);
+  })();
   var D = window.EVENT_DATA || {};
   var doc = document, root = doc.documentElement;
   var $ = function (s, r) { return (r || doc).querySelector(s); };
@@ -17,7 +27,7 @@
   $("#navMeta").textContent = [D.dateText, D.timeText, D.venueShort].filter(Boolean).join(" · ");
   $("#aboutEyebrow").textContent = D.about.eyebrow || ""; $("#aboutEyebrow").hidden = !D.about.eyebrow; $("#programEyebrow").textContent = D.program.eyebrow;
   var seasonEl = $('[data-field="season"]'); if (seasonEl) seasonEl.hidden = !D.season;
-  $("#speakersEyebrow").textContent = D.speakers.eyebrow; $("#speakersSub").textContent = D.speakers.sub;
+  $("#speakersEyebrow").textContent = D.speakers.eyebrow || ""; $("#speakersEyebrow").hidden = !D.speakers.eyebrow; $("#speakersSub").textContent = D.speakers.sub;
   $("#menuEyebrow").textContent = D.menu.eyebrow; $("#menuTeaser").textContent = D.menu.teaser || "";
   $("#venueEyebrow").textContent = D.venue.eyebrow; $("#orgLabel").textContent = D.footer.organizerLabel; $("#copyright").textContent = D.footer.copyright;
 
@@ -93,7 +103,7 @@
   $("#aboutLead").innerHTML = esc(D.about.lead).replace(/\{([^}]+)\}/g, "<strong>$1</strong>");
   $("#aboutText").hidden = !(D.about.paragraphs || []).length;
   var at = $("#aboutText"); (D.about.paragraphs || []).forEach(function (p) { var el = doc.createElement("p"); el.textContent = p; at.appendChild(el); });
-  var pl = $("#pillars"); (D.about.pillars || []).forEach(function (p, i) {
+  var pl = $("#pillars"); pl.hidden = !(D.about.pillars || []).length; (D.about.pillars || []).forEach(function (p, i) {
     var li = doc.createElement("li"); li.style.setProperty("--i", i);
     li.innerHTML = '<span class="pillars__num">' + esc(p.num) + '</span><h3 class="h3">' + esc(p.title) + '</h3><p>' + esc(p.text) + "</p>"; pl.appendChild(li);
   });
@@ -103,7 +113,7 @@
   (D.program.items || []).forEach(function (p, i) {
     var li = doc.createElement("li"); li.className = "tl" + (p.isBreak ? " tl--break" : ""); li.style.setProperty("--i", i);
     li.innerHTML = '<time class="tl__time"><b>' + esc(p.time) + '</b>' + (p.end ? '<span>–' + esc(p.end) + '</span>' : '') + '</time><span class="tl__dot" aria-hidden="true"></span>' +
-      '<div class="tl__body"><p class="eyebrow ' + (p.isBreak ? "eyebrow--badge" : "eyebrow--text") + '">' + esc(p.label) + '</p>' +
+      '<div class="tl__body">' + (p.label ? '<p class="eyebrow ' + (p.isBreak ? "eyebrow--badge" : "eyebrow--text") + '">' + esc(p.label) + '</p>' : "") +
       '<h3 class="h3">' + esc(p.title) + '</h3>' + (p.meta ? '<p class="tl__meta">' + esc(p.meta) + '</p>' : "") + "</div>";
     tl.appendChild(li);
   });
@@ -159,9 +169,9 @@
   /* ---- Ведущий ---- */
   var H = D.host || {};
   $("#hostCard").innerHTML = '<div class="poster__frame" aria-hidden="true"></div>' + arch(H, "arch arch--poster", "фото ведущего") +
-    '<div class="poster__body"><p class="eyebrow eyebrow--gold">' + esc(H.eyebrow) + '</p><p class="poster__kicker">' + esc(H.kicker) + '</p>' +
+    '<div class="poster__body">' + (H.eyebrow ? '<p class="eyebrow eyebrow--gold">' + esc(H.eyebrow) + '</p>' : "") + '<p class="poster__kicker">' + esc(H.kicker) + '</p>' +
     '<h2 class="poster__name" id="hostName">' + esc(H.name).replace(" ", "<br>") + '</h2>' + (H.role ? '<p class="poster__role">' + esc(H.role) + '</p>' : '') +
-    '<div class="poster__text">' + [].concat(H.description || []).map(function (t) { return '<p>' + esc(t) + '</p>'; }).join('') + '</div>' +
+    ([].concat(H.description || []).length ? '<div class="poster__text">' + [].concat(H.description || []).map(function (t) { return '<p>' + esc(t) + '</p>'; }).join('') + '</div>' : "") +
     (H.footnote ? '<p class="eyebrow eyebrow--gold">' + esc(H.footnote) + "</p>" : "") + "</div>";
 
   /* ---- Локация: кнопки маршрута и изображение «Как добраться» (появляется, когда в данных задан venue.scheme) ---- */
@@ -262,7 +272,7 @@
       "  return half_ + (uWing - half_) * e + sway + idle;",
       "}",
       "vec3 fold(float u) {",                         // объём одной складки: тень — свет — тень
-      "  vec3 dark = vec3(.31, .02, .065), mid = vec3(.64, .05, .145), hi = vec3(.85, .15, .25);",
+      "  vec3 dark = vec3(.47, .0, .02), mid = vec3(.84, .0, .04), hi = vec3(1., .22, .24);",
       "  float a = 1. - abs(u - .5) * 2.;",           // 0 у краёв складки, 1 в гребне
       "  vec3 c = mix(dark, mid, smoothstep(0., .55, a));",
       "  return mix(c, hi, smoothstep(.5, 1., a));",
@@ -341,7 +351,7 @@
         // каждая складка — столбик из M трапеций со своим градиентом, чтобы объём шёл за изгибом ткани
         for (j = 0; j < N; j++) for (m = 0; m < M; m++) {
           var xa = (E[j][m] + E[j][m + 1]) / 2, xb = (E[j + 1][m] + E[j + 1][m + 1]) / 2, g = ctx.createLinearGradient(xa, 0, Math.max(xb, xa + .5), 0);
-          g.addColorStop(0, "#560612"); g.addColorStop(.28, "#a30d25"); g.addColorStop(.5, "#d6243f"); g.addColorStop(.72, "#a30d25"); g.addColorStop(1, "#4a0510");
+          g.addColorStop(0, "#7a0006"); g.addColorStop(.28, "#cf000b"); g.addColorStop(.5, "#ff3a40"); g.addColorStop(.72, "#cf000b"); g.addColorStop(1, "#700006");
           ctx.beginPath(); ctx.moveTo(E[j][m], H * m / M); ctx.lineTo(E[j + 1][m] + .6, H * m / M);
           ctx.lineTo(E[j + 1][m + 1] + .6, H * (m + 1) / M + .6); ctx.lineTo(E[j][m + 1], H * (m + 1) / M + .6);
           ctx.closePath(); ctx.fillStyle = g; ctx.fill();
