@@ -19,11 +19,12 @@
   var seasonEl = $('[data-field="season"]'); if (seasonEl) seasonEl.hidden = !D.season;
   $("#speakersEyebrow").textContent = D.speakers.eyebrow || ""; $("#speakersEyebrow").hidden = !D.speakers.eyebrow; $("#speakersSub").textContent = D.speakers.sub;
   $("#menuEyebrow").textContent = D.menu.eyebrow; $("#menuTeaser").textContent = D.menu.teaser || "";
-  $("#venueEyebrow").textContent = D.venue.eyebrow; $("#orgLabel").textContent = D.footer.organizerLabel; $("#copyright").textContent = D.footer.copyright;
+  $("#venueEyebrow").textContent = D.venue.eyebrow || ""; $("#venueEyebrow").hidden = !D.venue.eyebrow; $("#orgLabel").textContent = D.footer.organizerLabel; $("#copyright").textContent = D.footer.copyright;
 
-  /* ---- Заголовок hero: слова появляются по очереди, {слово} – золотым курсивом ---- */
+  /* ---- Заголовок hero: слова появляются по очереди, {слово} – золотым. Строки нет – h1 с названием форума скрыт от глаз, но остаётся для читалок экрана ---- */
   (function () {
     var h = $("#heroTitle"), idx = 0;
+    if (!(D.heroTitle || []).length) { h.textContent = D.title || ""; h.className = "sr-only"; return; }
     (D.heroTitle || []).forEach(function (line, li) {
       var span = doc.createElement("span"); span.className = "hero__line";
       line.split(/(\{[^}]+\})|\s+/).filter(Boolean).forEach(function (w) {
@@ -101,8 +102,8 @@
   /* ---- Программа ---- */
   var tl = $("#timeline");
   (D.program.items || []).forEach(function (p, i) {
-    var li = doc.createElement("li"); li.className = "tl" + (p.isBreak ? " tl--break" : ""); li.style.setProperty("--i", i);
-    li.innerHTML = '<time class="tl__time"><b>' + esc(p.time) + '</b>' + (p.end ? '<span>–' + esc(p.end) + '</span>' : '') + '</time><span class="tl__dot" aria-hidden="true"></span>' +
+    var li = doc.createElement("li"); li.className = "tl" + (p.isBreak ? " tl--break" : "") + (p.time ? "" : " tl--cont"); li.style.setProperty("--i", i);
+    li.innerHTML = (p.time ? '<time class="tl__time"><b>' + esc(p.time) + '</b>' + (p.end ? '<span>–' + esc(p.end) + '</span>' : '') + '</time><span class="tl__dot" aria-hidden="true"></span>' : '<span></span><span></span>') +
       '<div class="tl__body">' + (p.label ? '<p class="eyebrow ' + (p.isBreak ? "eyebrow--badge" : "eyebrow--text") + '">' + esc(p.label) + '</p>' : "") +
       '<h3 class="h3">' + esc(p.title) + '</h3>' + (p.meta ? '<p class="tl__meta">' + esc(p.meta) + '</p>' : "") + "</div>";
     tl.appendChild(li);
@@ -110,33 +111,20 @@
 
   /* ---- Спикеры + модалка ---- */
   var grid = $("#speakersGrid"), modal = $("#modal");
-  // шторки в рамке: две половины, раскрываются, когда блок появляется на экране (или открывается окно «Подробнее»)
-  var CURTAIN = '<span class="arch__curtain" aria-hidden="true"><i></i><i></i></span>';
+  // фото стоит в рамке сразу, без анимации: шторы – часть самого снимка (фон)
   var arch = function (sp, cls, caption) {
     return sp.photo
-      ? '<div class="' + cls + '"><img src="' + esc(sp.photo) + '" alt="' + esc(sp.name) + '" loading="lazy">' + CURTAIN + '</div>'
-      : '<div class="' + cls + ' arch--empty"><b>' + esc(sp.initials || initials(sp.name)) + '</b><span class="eyebrow">' + esc(caption || "фото") + "</span>" + CURTAIN + "</div>";
+      ? '<div class="' + cls + '"><img src="' + esc(sp.photo) + '" alt="' + esc(sp.name) + '" loading="lazy"></div>'
+      : '<div class="' + cls + ' arch--empty"><b>' + esc(sp.initials || initials(sp.name)) + '</b><span class="eyebrow">' + esc(caption || "фото") + "</span></div>";
   };
   (D.speakers.items || []).forEach(function (sp, i) {
     var b = doc.createElement("button"); b.type = "button"; b.className = "speaker"; b.style.setProperty("--i", i);
     b.innerHTML = '<div class="speaker__top">' + arch(sp, "arch") + '<div class="speaker__id"><h3 class="h3">' + esc(sp.name) + '</h3>' +
       (sp.role ? '<p class="speaker__role">' + esc(sp.role) + '</p>' : '') + (sp.company ? '<p class="eyebrow eyebrow--company">' + esc(sp.company) + '</p>' : '') + '</div></div>' +
-      '<div class="speaker__topic"><p class="eyebrow eyebrow--red">' + (sp.time ? esc(sp.time) : 'Тема') + '</p><p' + (sp.topic ? '' : ' class="speaker__note"') + '>' + esc(sp.topic || sp.topicNote || 'Тема уточняется') + '</p></div><span class="speaker__more">Подробнее →</span><span class="speaker__glare" aria-hidden="true"></span>';
+      '<div class="speaker__topic"><p class="eyebrow eyebrow--red">' + (sp.time ? esc(sp.time) : 'Тема') + '</p><p' + (sp.topic ? '' : ' class="speaker__note"') + '>' + esc(sp.topic || sp.topicNote || 'Тема уточняется') + '</p></div><span class="speaker__more">Подробнее →</span>';
     b.addEventListener("click", function () { openModal(sp); });
-    if (finePointer && !reduced) tilt(b);
     grid.appendChild(b);
   });
-  function tilt(card) {
-    var r;
-    card.addEventListener("pointerenter", function () { r = card.getBoundingClientRect(); card.classList.add("is-tilting"); });
-    card.addEventListener("pointermove", function (e) {
-      if (!r) r = card.getBoundingClientRect();
-      var x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
-      card.style.setProperty("--rx", (-y * 7).toFixed(2) + "deg"); card.style.setProperty("--ry", (x * 9).toFixed(2) + "deg");
-      card.style.setProperty("--gx", ((x + .5) * 100).toFixed(1) + "%"); card.style.setProperty("--gy", ((y + .5) * 100).toFixed(1) + "%");
-    });
-    card.addEventListener("pointerleave", function () { card.classList.remove("is-tilting"); card.style.setProperty("--rx", "0deg"); card.style.setProperty("--ry", "0deg"); r = null; });
-  }
   var lastFocus = null;
   function openModal(sp) {
     lastFocus = doc.activeElement;
@@ -146,7 +134,7 @@
     $("#modalTopic").textContent = sp.topic || sp.topicNote || "Тема уточняется"; $("#modalWhen").textContent = [sp.time, sp.stage].filter(Boolean).join(" · ");
     $("#modalBio").textContent = sp.bio || "";
     modal.hidden = false; doc.body.classList.add("modal-open");
-    void modal.offsetWidth;        // браузер должен увидеть закрытое состояние, иначе окно и шторки появятся без движения
+    void modal.offsetWidth;        // браузер должен увидеть закрытое состояние, иначе окно появится без движения
     requestAnimationFrame(function () { requestAnimationFrame(function () { modal.classList.add("is-open"); $(".modal__close", modal).focus(); }); });
   }
   function closeModal() {
