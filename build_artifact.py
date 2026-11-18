@@ -12,6 +12,7 @@ css = (root / "css/style.css").read_text(encoding="utf-8")
 def _inline_font(m):
     data = base64.b64encode((root / "assets/fonts" / m.group(1)).read_bytes()).decode()
     return f'url("data:font/woff2;base64,{data}")'
+css = re.sub(r', url\("\.\./assets/fonts/[^"]+\.woff"\) format\("woff"\)', "", css)   # запасной woff в артефакт не встраиваем
 css = re.sub(r'url\("\.\./assets/fonts/([^"]+)"\)', _inline_font, css)
 css = css.replace('url("../assets/', 'url("assets/')   # CSS встраивается в страницу: пути считаются от неё
 data = (root / "data/event.js").read_text(encoding="utf-8")
@@ -20,7 +21,6 @@ out = f"""<title>{title}</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="{desc}">
 <link rel="icon" href="assets/logo/favicon.png" type="image/png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
 <style>
 {css}
 </style>
@@ -45,7 +45,6 @@ menu_out = f"""<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Банкетное меню</title>
 <link rel="icon" href="assets/logo/favicon.png" type="image/png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
 <style>
 {css}
 </style>
