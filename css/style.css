@@ -150,6 +150,8 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .hero__drapes { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; display: none; }
 .has-drapes .hero__drapes { display: block; }
 .has-drapes .hero .wing, .has-drapes .hero::after { display: none; }
+/* на узком экране шторы висят в полях страницы, поэтому поля первого экрана шире обычных: карточки и отсчёт не заходят на ткань */
+@media (max-width: 880px) { .has-drapes .hero { padding-left: max(32px, env(safe-area-inset-left, 0px)); padding-right: max(32px, env(safe-area-inset-right, 0px)); } }
 .hero__inner { position: relative; z-index: 3; display: grid; justify-items: center; gap: 22px; width: 100%; max-width: 760px; }
 /* Логотип. Состояния ставит js: is-charging → is-burst → is-ring-in → is-bottle → is-final. */
 /* --lw – ширина логотипа на поверхности цилиндра, --rk – радиус цилиндра в долях этой ширины.

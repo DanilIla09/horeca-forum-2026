@@ -239,14 +239,14 @@
     var ctx = null, gl = null, cw = 0, ch = 0, cdpr = 1;
     var FRAG = [
       "precision highp float;",
-      "uniform vec2 uRes; uniform float uT, uNow, uN, uKeep, uDpr, uNav, uSw;",
+      "uniform vec2 uRes; uniform float uT, uNow, uN, uKeep, uDpr, uDc, uSw, uTieW, uBotW, uTieY;",
       "const float DUR = 1.9; const float LAG = .30;",
-      "float YT;",                                    // высота подхвата (доля высоты экрана): на узком экране ниже, чтобы кисть висела под карточками даты и места
+      "float YT;",                                    // высота подхвата (доля высоты экрана); её и ширину штор у подхвата и внизу задаёт drapeFit по месту содержимого
       "float hash(float n) { return fract(sin(n * 127.1) * 43758.5453); }",
       "float finalEdge(float yn, float r) {",         // внутренний край шторы в раскрытом виде: сверху широко, у подхвата узко, ниже чуть расходится
       "  if (uKeep < .5) return -28.;",               // режим без штор по бокам: уходят за край целиком (сейчас не используется)
-      "  float wide = smoothstep(600., 1000., uRes.x);",                                   // на узком экране шторы тоньше, чтобы не закрывать логотип и карточки
-      "  float top = min(uRes.x * mix(.17, .21, wide), 340.), tie = min(uRes.x * mix(.042, .062, wide), 96.), bot = min(uRes.x * mix(.05, .088, wide), 136.);",
+      "  float wide = smoothstep(600., 1000., uRes.x);",                                   // на узком экране шторы тоньше, чтобы не закрывать логотип
+      "  float top = min(uRes.x * mix(.17, .21, wide), 340.), tie = uTieW, bot = uBotW;",
       "  float dy = sqrt((yn - YT) * (yn - YT) + r * r) - r;",   // r скругляет перегиб у подхвата: в движении плавная дуга, в конце узкая перетяжка
       "  if (yn < YT) return tie + (top - tie) * (1. - pow(max(1. - dy / YT, 0.), 2.6));",
       "  return tie + (bot - tie) * (1. - exp(-dy / .07));",
@@ -280,10 +280,10 @@
       "}",
       "void main() {",
       "  vec2 p = gl_FragCoord.xy / uDpr; float W = uRes.x, H = uRes.y; float y = H - p.y, yn = clamp(y / H, 0., 1.);",
-      "  float wideM = smoothstep(600., 1000., W); YT = mix(.715, .60, wideM);",
+      "  float wideM = smoothstep(600., 1000., W); YT = clamp(uTieY / H, .25, .8);",
       "  float x = min(p.x, W - p.x);",               // правая штора – зеркало левой
       "  float xl = lead(yn), d = x - xl;",           // d > 0 – сцена, d < 0 – ткань
-      "  float sh = clamp(1. - (d - 2.) / clamp(W * .08, 34., 110.), 0., 1.); float shadow = .34 * sh * sh * step(0., d);",
+      "  float sh = clamp(1. - (d - 2.) / mix(16., 110., smoothstep(400., 1400., W)), 0., 1.); float shadow = .34 * sh * sh * step(0., d);",
       // боковая штора: складки сходятся к подхвату
       "  float u = clamp(x / max(xl, 1.), 0., 1.);",
       "  float j = uN * (u + .035 * sin(u * 9. + .7) + .02 * sin(u * 23. + 2.));",
@@ -317,7 +317,7 @@
       "  tasC *= 1. - .45 * smoothstep(34. * k, 38. * k, ty) * smoothstep(44. * k, 40. * k, ty);",
       // драпировка сверху: полукружия ткани между точками сборки, складки повторяют провис
       "  float P = W / uSw, q = fract(p.x / P), tl = min(q, 1. - q) * 2.;",   // tl: 0 – середина полукружия, 1 – точка сборки
-      "  float Dc = uNav + clamp(H * .11, 64., 110.);",
+      "  float Dc = uDc;",                              // глубина драпировки в середине полукружия (задаёт drapeFit: не ниже верха логотипа)
       "  float lift = uKeep < .5 ? (Dc + 44.) * pow(clamp((uT - .9) / 1.2, 0., 1.), 2.) : 0.;",   // телефон: драпировка уезжает вверх
       "  float ys = y + lift, D = Dc * (.16 + .84 * pow(max(1. - tl * tl, 0.), .8)), s = ys / D;",
       "  float js = 4.6 * pow(clamp(s, 0., 1.), 1.25);",
@@ -348,16 +348,34 @@
         g.useProgram(prog);
         var buf = g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER, buf); g.bufferData(g.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), g.STATIC_DRAW);
         var loc = g.getAttribLocation(prog, "a"); g.enableVertexAttribArray(loc); g.vertexAttribPointer(loc, 2, g.FLOAT, false, 0, 0);
-        var U = {}; ["uRes", "uT", "uNow", "uN", "uKeep", "uDpr", "uNav", "uSw"].forEach(function (n) { U[n] = g.getUniformLocation(prog, n); });
+        var U = {}; ["uRes", "uT", "uNow", "uN", "uKeep", "uDpr", "uDc", "uSw", "uTieW", "uBotW", "uTieY"].forEach(function (n) { U[n] = g.getUniformLocation(prog, n); });
         return { g: g, U: U, cv: canvas };
       } catch (e) { return null; }
     }
+    /* Размеры штор под содержимое первого экрана: шторы не должны заходить на карточки, отсчёт и кнопку.
+       Ширина у подхвата и внизу – не больше свободного поля слева от содержимого. На узком экране подхват стоит над карточками:
+       выше него штора широкая (рядом с логотипом есть место), ниже висит узкой полосой в поле страницы.
+       Положение берётся из вёрстки (offsetLeft/offsetTop), а не из getBoundingClientRect: блоки в момент вступления сдвинуты анимацией. */
+    function drapeFit(w, h) {
+      var wide = Math.min(1, Math.max(0, (w - 600) / 400)); wide = wide * wide * (3 - 2 * wide);
+      var tie = Math.min(w * (.042 + .02 * wide), 96), bot = Math.min(w * (.05 + .038 * wide), 136), tieY = h * .6;
+      var inner = $(".hero__inner"), facts = $(".facts"), side = Infinity, navH = nav.offsetHeight || 64;
+      var dc = navH + Math.max(64, Math.min(110, h * .11));        // драпировка сверху: видна из-под шапки, но не доходит до логотипа
+      if (inner && logo) dc = Math.max(navH + 40, Math.min(dc, inner.offsetTop + logo.offsetTop + logo.offsetHeight * .1 - 6));
+      if (inner && facts) {
+        [".facts", ".countdown", ".hero__inner .btn"].forEach(function (sel) { var el = $(sel); if (el) side = Math.min(side, inner.offsetLeft + el.offsetLeft); });
+        tie = Math.max(8, Math.min(tie, side - 16)); bot = Math.max(10, Math.min(bot, side - 10));
+        if (w <= 880) tieY = Math.min(h * .75, Math.max(h * .3, inner.offsetTop + facts.offsetTop - 18));
+      }
+      return { tie: tie, bot: bot, tieY: tieY, dc: dc };
+    }
     function glDraw(o, w, h, dpr, t, keep) {   // t – секунды от начала открытия (≤0 – закрыт, большое число – раскрыт); keep=1 – шторы остаются по бокам
-      var g = o.g, U = o.U;
+      var g = o.g, U = o.U, fit = o.fit || (o.fit = drapeFit(w, h));
+      g.uniform1f(U.uTieW, fit.tie); g.uniform1f(U.uBotW, fit.bot); g.uniform1f(U.uTieY, fit.tieY); g.uniform1f(U.uDc, fit.dc);
       g.viewport(0, 0, o.cv.width, o.cv.height);
       g.uniform2f(U.uRes, w, h); g.uniform1f(U.uT, t); g.uniform1f(U.uNow, performance.now() / 1000);
       g.uniform1f(U.uN, w < 640 ? 5 : 8); g.uniform1f(U.uKeep, keep); g.uniform1f(U.uDpr, dpr);
-      g.uniform1f(U.uNav, nav.offsetHeight || 64); g.uniform1f(U.uSw, w < 700 ? 2 : w < 1800 ? 4 : 6);
+      g.uniform1f(U.uSw, w < 700 ? 2 : w < 1800 ? 4 : 6);
       g.clearColor(0, 0, 0, 0); g.clear(g.COLOR_BUFFER_BIT); g.drawArrays(g.TRIANGLE_STRIP, 0, 4);
     }
     /* Неподвижные шторы первого экрана: шейдер рисует раскрытое состояние один раз на холсте вне страницы,
@@ -369,19 +387,21 @@
       if (!w || !h) return;
       if (stat === null) stat = makeGL(doc.createElement("canvas")) || false;
       if (!stat) return;
+      root.classList.add("has-drapes");        // класс расширяет поля первого экрана на телефоне, поэтому ставится до замера
+      w = hero.clientWidth; h = hero.clientHeight;
       var dpr = Math.min(window.devicePixelRatio || 1, 2);
       stat.cv.width = Math.round(w * dpr); stat.cv.height = Math.round(h * dpr);
+      stat.fit = null; if (gl) gl.fit = null;   // размеры штор пересчитываются по текущей вёрстке
       glDraw(stat, w, h, dpr, 99, 1);
       drapes.width = stat.cv.width; drapes.height = stat.cv.height;
       drapes.getContext("2d").drawImage(stat.cv, 0, 0);
       stat.cv.width = stat.cv.height = 1;      // большой буфер больше не нужен: картинка уже в #drapes
-      root.classList.add("has-drapes");
     }
     function sizeCurtain() {
       if (!gl && !ctx && !(gl = makeGL(cv))) ctx = cv.getContext("2d");
       cdpr = Math.min(window.devicePixelRatio || 1, gl ? 2 : 1.5); cw = window.innerWidth; ch = window.innerHeight;
       cv.width = Math.round(cw * cdpr); cv.height = Math.round(ch * cdpr);
-      if (!gl) ctx.setTransform(cdpr, 0, 0, cdpr, 0, 0);
+      if (gl) gl.fit = null; else ctx.setTransform(cdpr, 0, 0, cdpr, 0, 0);
     }
     function drawCurtain(t) {            // t – секунды от начала открытия (≤0 – закрыт)
       if (gl) { glDraw(gl, cw, ch, cdpr, t, 1); return; }
