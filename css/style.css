@@ -302,7 +302,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .arch--empty { display: grid; place-content: center; justify-items: center; gap: 6px; padding-top: 22%; background: url("../assets/speakers/stage-empty.jpg") center / cover; }
 .arch--empty .eyebrow { color: #fff; }
 .arch--empty b { font: 700 26px/1 var(--font-display); color: #fff; letter-spacing: .02em; }
-.arch--lg { width: 180px; }
+.arch--lg { width: 240px; }
 .arch--lg b { font-size: 40px; }
 .arch--poster { width: min(100%, 170px); border-color: var(--gold); }
 .arch--poster b { color: var(--gold-light); font-size: 48px; }
@@ -424,14 +424,14 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .modal.is-open .modal__card { transform: none; }
 .modal__close { position: absolute; top: 14px; right: 14px; width: 44px; height: 44px; border: 1px solid var(--gold); background: var(--ivory); color: var(--ink); font-size: 24px; line-height: 1; cursor: pointer; border-radius: var(--radius); z-index: 1; }
 .modal__close:hover { background: var(--gold); color: var(--ink); }
-.modal__photo { display: flex; justify-content: center; }
+.modal__photo { display: flex; justify-content: center; align-items: flex-start; }   /* без растягивания по высоте окна: иначе фото обрезается в узкую полосу */
 .modal__body { display: grid; gap: 10px; min-width: 0; }
 .modal__name { font-size: clamp(26px, 3.4vw, 38px); line-height: 1.08; letter-spacing: -.015em; }
 .modal__role { color: var(--ink-muted); font-size: 15px; }
 .modal__topic { font: 700 clamp(17px, 2vw, 21px)/1.3 var(--font-display); }
 .modal__bio { font-size: 15px; color: var(--ink); }
 .modal__body .rule { margin: 8px 0; }
-@media (min-width: 700px) { .modal__card { grid-template-columns: 200px minmax(0, 1fr); } .modal__photo { justify-content: flex-start; } }
+@media (min-width: 700px) { .modal__card { grid-template-columns: 240px minmax(0, 1fr); width: min(100%, 860px); } .modal__photo { justify-content: flex-start; } }
 
 /* ===== Появление ===== */
 .js .reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s var(--ease), transform .7s var(--ease); }

@@ -121,7 +121,7 @@
     var b = doc.createElement("button"); b.type = "button"; b.className = "speaker"; b.style.setProperty("--i", i);
     b.innerHTML = '<div class="speaker__top">' + arch(sp, "arch") + '<div class="speaker__id"><h3 class="h3">' + esc(sp.name) + '</h3>' +
       (sp.role ? '<p class="speaker__role">' + esc(sp.role) + '</p>' : '') + (sp.company ? '<p class="eyebrow eyebrow--company">' + esc(sp.company) + '</p>' : '') + '</div></div>' +
-      '<div class="speaker__topic"><p class="eyebrow eyebrow--red">' + (sp.time ? esc(sp.time) : 'Тема') + '</p><p' + (sp.topic ? '' : ' class="speaker__note"') + '>' + esc(sp.topic || sp.topicNote || 'Тема уточняется') + '</p></div><span class="speaker__more">Подробнее →</span>';
+      '<div class="speaker__topic"><p' + (sp.topic ? '' : ' class="speaker__note"') + '>' + esc(sp.topic || sp.topicNote || 'Тема уточняется') + '</p></div><span class="speaker__more">Подробнее →</span>';
     b.addEventListener("click", function () { openModal(sp); });
     grid.appendChild(b);
   });
@@ -131,7 +131,7 @@
     $("#modalPhoto").innerHTML = arch(sp, "arch arch--lg");
     $("#modalName").textContent = sp.name || ""; $("#modalRole").textContent = sp.role || ""; $("#modalCompany").textContent = sp.company || "";
     $("#modalRole").hidden = !sp.role; $("#modalCompany").hidden = !sp.company;
-    $("#modalTopic").textContent = sp.topic || sp.topicNote || "Тема уточняется"; $("#modalWhen").textContent = [sp.time, sp.stage].filter(Boolean).join(" · ");
+    $("#modalTopic").textContent = sp.topic || sp.topicNote || "Тема уточняется"; $("#modalWhen").textContent = sp.stage || ""; $("#modalWhen").hidden = !sp.stage;       // время выступления не показываем (просьба заказчика), только зал, если задан
     $("#modalBio").textContent = sp.bio || "";
     modal.hidden = false; doc.body.classList.add("modal-open");
     void modal.offsetWidth;        // браузер должен увидеть закрытое состояние, иначе окно появится без движения
