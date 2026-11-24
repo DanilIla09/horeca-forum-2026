@@ -48,7 +48,7 @@ window.EVENT_DATA = {
       { time: "14:05", title: "Дмитрий Казанцев", role: "Налоговый эксперт" },
       { time: "14:25", title: "Кофе-брейк", isBreak: true },
       { time: "14:45", title: "Оперное выступление № 2: «Con te partirò» (Ф. Сартори)" },
-      { time: "14:50", title: "Клиентский кейс", meta: "Спикер и тема уточняются" },
+      { time: "14:50", title: "Гурген Басенцян", role: "Основатель, Good Project Family", meta: "Клиентский кейс" },
       { time: "15:20", title: "Заключительное слово" },
       { time: "15:25", title: "Розыгрыш подарков среди гостей" },
       { time: "15:35", title: "Главный музыкальный хедлайнер – группа JCS" }
@@ -71,7 +71,7 @@ window.EVENT_DATA = {
       { name: "Анель Баймуратова", role: "Менеджер канала HoReCa", company: "CCI Kazakhstan", topic: "«Обзор стратегии брендов CCI и возможности развития партнёрства»", photo: "assets/speakers/baimuratova.jpg", bio: "Менеджер канала HoReCa, CCI Kazakhstan. Тема: «Обзор стратегии брендов CCI и возможности развития партнёрства»." },
       { name: "Дмитрий Казанцев", role: "Налоговый эксперт", company: "", topic: "", topicNote: "Тема уточняется", photo: "assets/speakers/kazantsev.jpg", bio: "Налоговый эксперт. Тема выступления уточняется." },
       { name: "Ахмет Кюршад Эртин", role: "Генеральный директор", company: "Coca-Cola İçecek", topic: "", topicNote: "Тема уточняется", photo: "assets/speakers/ertin.jpg", bio: "Генеральный директор Coca-Cola İçecek. Тема выступления уточняется." },
-      { name: "Гурген Басенцян", role: "Основатель", company: "Good Project Family", topic: "", topicNote: "Тема уточняется", photo: "assets/speakers/basentsyan.jpg", bio: "Основатель Good Project Family. Тема выступления уточняется." }
+      { name: "Гурген Басенцян", role: "Основатель", company: "Good Project Family", topic: "Клиентский кейс", photo: "assets/speakers/basentsyan.jpg", bio: "Основатель Good Project Family. Выступит с клиентским кейсом." }
     ]
   },
 
