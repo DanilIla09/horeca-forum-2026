@@ -488,15 +488,13 @@
         c.clearRect(0, 0, r.width, r.height);
         if (T > 2) { burstCv.width = burstCv.width; return; }
         var mix = Math.max(0, Math.min(1, (T - .3) / .85)), fade = T < 1.4 ? 1 : Math.max(0, 1 - (T - 1.4) / .45);
-        var R = Math.round(230 + 25 * mix), G = Math.round(199 + 56 * mix), B = Math.round(110 + 145 * mix), drag = Math.pow(.925, dt);
-        c.globalCompositeOperation = "lighter";
+        var R = Math.round(230 + 14 * mix), G = Math.round(199 - 199 * mix), B = Math.round(110 - 101 * mix), drag = Math.pow(.925, dt);   // золото → красный Coca-Cola
         for (i = 0; i < F.length; i++) {
           var f = F[i]; if (T > f.life) continue; var al = (1 - T / f.life) * .8;
           f.vx *= drag; f.vy = f.vy * drag + (f.bubble ? -.05 : .16) * dt; f.x += f.vx * dt; f.y += f.vy * dt;
-          if (f.bubble) { c.beginPath(); c.arc(f.x, f.y, f.r, 0, 6.28); c.strokeStyle = "rgba(255,240,205," + al.toFixed(3) + ")"; c.lineWidth = 1.2; c.stroke(); }
-          else { c.beginPath(); c.moveTo(f.x, f.y); c.lineTo(f.x - f.vx * 2.4, f.y - f.vy * 2.4); c.strokeStyle = "rgba(230,199,110," + al.toFixed(3) + ")"; c.lineWidth = 1.6; c.stroke(); }
+          if (f.bubble) { c.beginPath(); c.arc(f.x, f.y, f.r, 0, 6.28); c.strokeStyle = "rgba(201,162,39," + al.toFixed(3) + ")"; c.lineWidth = 1.2; c.stroke(); }
+          else { c.beginPath(); c.moveTo(f.x, f.y); c.lineTo(f.x - f.vx * 2.4, f.y - f.vy * 2.4); c.strokeStyle = "rgba(244,0,9," + (al * .8).toFixed(3) + ")"; c.lineWidth = 1.6; c.stroke(); }
         }
-        c.globalCompositeOperation = "source-over";
         if (T < 1.5) {
           cap.vy += .5 * dt; cap.vx *= Math.pow(.99, dt); cap.x += cap.vx * dt; cap.y += cap.vy * dt; cap.a += cap.va * dt;
           c.save(); c.translate(cap.x, cap.y); c.rotate(cap.a); c.globalAlpha = T < 1.1 ? 1 : Math.max(0, 1 - (T - 1.1) / .4);
@@ -529,7 +527,7 @@
         heroEl.classList.add("is-shake"); later(function () { heroEl.classList.remove("is-shake"); }, 450);
         var ok = burst(heroEl), landAt = ok ? 1280 : 300;
         later(function () { logo.classList.add("is-ring-in"); if (ring) ring.spinIn(); }, ok ? 220 : 60);       // надпись влетает на цилиндр: оборот 360°
-        later(function () { logo.classList.add("is-bottle"); if (ring) ring.setFull(); }, landAt);               // частицы сели: бутылка белая, на месте
+        later(function () { logo.classList.add("is-bottle"); if (ring) ring.setFull(); }, landAt);               // частицы сели: бутылка красная, на месте
         later(function () { if (onDone) onDone(); }, landAt + 200);
         later(function () { logo.className = "logo3d is-final"; logoBusy = false; if (ring) ring.rest(); }, landAt + 700);
       }, chargeMs + 150);
@@ -545,7 +543,7 @@
         var N = 18, html = "", k;
         for (var f = 0; f < 2; f++) for (k = 0; k < N; k++) html += '<i class="f' + f + '" style="--i:' + k + ';--a:' + ((k + .5) * 180 / N - 90 + f * 180).toFixed(2) + '"></i>';
         spinEl.innerHTML = html;
-        ["logo-text.png", "horeca-forum-2026-white.png", "cci-white.png"].forEach(function (n) { var im = new Image(); im.src = base + n; });
+        ["logo-text-red.png", "horeca-forum-2026-red.png", "cci-color.png"].forEach(function (n) { var im = new Image(); im.src = base + n; });
         return null;
       }
       var cvs = doc.createElement("canvas"), g = null, U = {}, prog;
@@ -586,7 +584,7 @@
 
       // текстуры: картинка растягивается до 1024×1024, чтобы работало сглаживание при уменьшении (mipmap)
       var loaded = 0;
-      [["uText", "logo-text.png"], ["uLogo", "horeca-forum-2026-white.png"], ["uCci", "cci-white.png"]].forEach(function (d, unit) {
+      [["uText", "logo-text-red.png"], ["uLogo", "horeca-forum-2026-red.png"], ["uCci", "cci-color.png"]].forEach(function (d, unit) {
         var tex = g.createTexture(), im = new Image();
         g.activeTexture(g.TEXTURE0 + unit); g.bindTexture(g.TEXTURE_2D, tex);
         g.texImage2D(g.TEXTURE_2D, 0, g.RGBA, 1, 1, 0, g.RGBA, g.UNSIGNED_BYTE, new Uint8Array(4)); g.uniform1i(U[d[0]], unit);
