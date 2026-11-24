@@ -58,6 +58,7 @@ window.EVENT_DATA = {
   speakers: {
     eyebrow: "",                   // подпись над заголовком «Спикеры»; пусто – не показывается
     sub: "Нажмите на карточку, чтобы узнать больше",
+    // Состав и написание имён – по таблице организаторов «Спикеры_ФИО» от 24.11 (9 человек).
     // photo: путь к файлу в assets/speakers/ (вертикальное фото 600×800). Пусто – арка с инициалами.
     // Время выступления в карточках и в окне спикера не показывается (просьба заказчика 24.11) – оно есть только в программе.
     // Пустые role / company / topic не показываются. Должности и темы без подтверждения клиента не заполнять.
@@ -66,10 +67,11 @@ window.EVENT_DATA = {
       { name: "Омер Йылмаз", role: "Директор отдела продаж", company: "CCI Kazakhstan", topic: "Приветственное слово директора отдела продаж", photo: "assets/speakers/yilmaz.jpg", bio: "Директор отдела продаж CCI Kazakhstan. Приветственное слово участникам форума." },
       { name: "Лаура Алимкулова", role: "Директор отдела маркетинга", company: "CCI Kazakhstan", topic: "«Пульс рынка HoReCa: обзор рынка, влияние экономических факторов и инсайты исследования потребительского поведения OP Shopper Behaviour»", photo: "assets/speakers/alimkulova.jpg", bio: "Директор отдела маркетинга CCI Kazakhstan. Расскажет о состоянии рынка HoReCa, влиянии экономических факторов и результатах исследования потребительского поведения OP Shopper Behaviour." },
       { name: "Толга Гомеч", role: "Директор по международному бизнесу в регионе AMEA", company: "Domino’s Pizza", topic: "", topicNote: "Тема уточняется", photo: "assets/speakers/gomech.jpg", bio: "Директор по международному бизнесу в регионе AMEA, Domino’s Pizza. Тема выступления уточняется." },
-      { name: "Тарлан Усейнов", role: "IMX директор", company: "The Coca-Cola Company", topic: "«Новая медиасреда»", photo: "", bio: "IMX директор, The Coca-Cola Company. Тема: «Новая медиасреда»." },
+      { name: "Тарлан Усейнов", role: "IMX директор", company: "The Coca-Cola Company", topic: "«Новая медиасреда»", photo: "assets/speakers/useinov.jpg", bio: "IMX директор, The Coca-Cola Company. Тема: «Новая медиасреда»." },
       { name: "Анель Баймуратова", role: "Менеджер канала HoReCa", company: "CCI Kazakhstan", topic: "«Обзор стратегии брендов CCI и возможности развития партнёрства»", photo: "assets/speakers/baimuratova.jpg", bio: "Менеджер канала HoReCa, CCI Kazakhstan. Тема: «Обзор стратегии брендов CCI и возможности развития партнёрства»." },
-      { name: "Дмитрий Казанцев", role: "Налоговый эксперт", company: "", topic: "", topicNote: "Тема уточняется", photo: "", bio: "Налоговый эксперт. Тема выступления уточняется." },
-      { name: "Клиентский кейс", initials: "?", role: "Спикер и компания уточняются", company: "", topic: "", topicNote: "Спикер и тема уточняются", photo: "", bio: "Выступление клиента или партнёра. Имя, должность, компания и тема выступления уточняются." }
+      { name: "Дмитрий Казанцев", role: "Налоговый эксперт", company: "", topic: "", topicNote: "Тема уточняется", photo: "assets/speakers/kazantsev.jpg", bio: "Налоговый эксперт. Тема выступления уточняется." },
+      { name: "Ахмет Кюршад Эртин", role: "Генеральный директор", company: "Coca-Cola İçecek", topic: "", topicNote: "Тема уточняется", photo: "assets/speakers/ertin.jpg", bio: "Генеральный директор Coca-Cola İçecek. Тема выступления уточняется." },
+      { name: "Гурген Басенцян", role: "Основатель", company: "Good Project Family", topic: "", topicNote: "Тема уточняется", photo: "assets/speakers/basentsyan.jpg", bio: "Основатель Good Project Family. Тема выступления уточняется." }
     ]
   },
 
