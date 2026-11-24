@@ -95,7 +95,7 @@ window.EVENT_DATA = {
       // Хедлайнер вечера. photoWide: true – горизонтальное фото (группа), рамка прямоугольная, а не арка.
       eyebrow: "",
       kicker: "Хедлайнер вечера",
-      name: "GCS",
+      name: "JCS",
       photo: "assets/speakers/headliner.jpg",
       photoWide: true,
       role: "",
