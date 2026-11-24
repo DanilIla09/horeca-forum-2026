@@ -11,6 +11,9 @@
   var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   root.classList.add("js");
+  // Номер версии из адреса этого скрипта (…/app.js?v=…). Дописывается к адресам фото: после замены картинок браузер не покажет старые из кэша.
+  var VER = ((doc.currentScript && doc.currentScript.src) || "").split("?v=")[1] || "";
+  var withVer = function (url) { return url && VER && url.indexOf("?") < 0 ? url + "?v=" + VER : url; };
 
   /* ---- Простые поля ---- */
   $$("[data-field]").forEach(function (el) { var v = get(el.getAttribute("data-field")); if (v != null) el.textContent = v; });
@@ -114,7 +117,7 @@
   // фото стоит в рамке сразу, без анимации: шторы – часть самого снимка (фон)
   var arch = function (sp, cls, caption) {
     return sp.photo
-      ? '<div class="' + cls + '"><img src="' + esc(sp.photo) + '" alt="' + esc(sp.name) + '" loading="lazy"></div>'
+      ? '<div class="' + cls + '"><img src="' + esc(withVer(sp.photo)) + '" alt="' + esc(sp.name) + '" loading="lazy"></div>'
       : '<div class="' + cls + ' arch--empty"><b>' + esc(sp.initials || initials(sp.name)) + '</b><span class="eyebrow">' + esc(caption || "фото") + "</span></div>";
   };
   (D.speakers.items || []).forEach(function (sp, i) {
