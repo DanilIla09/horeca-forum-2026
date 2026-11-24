@@ -6,8 +6,8 @@ import numpy as np
 from PIL import Image
 
 d = sys.argv[1].rstrip("/") + "/"
-RED = (244, 0, 9)            # красный Coca-Cola, как на сайте (--red)
-CCI_RED = (217, 47, 57)      # фирменные цвета CCI из cci-kazakhstan.png
+RED = (175, 0, 0)            # красный сайта #AF0000 (--red)
+CCI_RED = (175, 0, 0)        # красный сайта; фирменный красный CCI был (217, 47, 57)
 CCI_GREY = (61, 76, 82)
 
 

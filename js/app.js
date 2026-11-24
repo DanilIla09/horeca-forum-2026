@@ -144,13 +144,32 @@
   $$("[data-close]", modal).forEach(function (el) { el.addEventListener("click", closeModal); });
   doc.addEventListener("keydown", function (e) { if (e.key === "Escape") { if (!modal.hidden) closeModal(); closeNav(); } });
 
-  /* ---- Ведущий ---- */
-  var H = D.host || {};
-  $("#hostCard").innerHTML = '<div class="poster__frame" aria-hidden="true"></div>' + arch(H, "arch arch--poster", "фото ведущего") +
-    '<div class="poster__body">' + (H.eyebrow ? '<p class="eyebrow eyebrow--gold">' + esc(H.eyebrow) + '</p>' : "") + '<p class="poster__kicker">' + esc(H.kicker) + '</p>' +
-    '<h2 class="poster__name" id="hostName">' + esc(H.name).replace(" ", "<br>") + '</h2>' + (H.role ? '<p class="poster__role">' + esc(H.role) + '</p>' : '') +
-    ([].concat(H.description || []).length ? '<div class="poster__text">' + [].concat(H.description || []).map(function (t) { return '<p>' + esc(t) + '</p>'; }).join('') + '</div>' : "") +
-    (H.footnote ? '<p class="eyebrow eyebrow--gold">' + esc(H.footnote) + "</p>" : "") + "</div>";
+  /* ---- Ведущие: по блоку на каждого из D.hosts. Первый блок есть в разметке (#host), остальные создаются следом за ним ---- */
+  (function () {
+    var hosts = D.hosts || (D.host ? [D.host] : []), first = $("#host"), prev = first;
+    if (!hosts.length) { first.hidden = true; return; }
+    hosts.forEach(function (H, n) {
+      var sec = first;
+      if (n) { sec = doc.createElement("section"); sec.className = "section"; sec.id = "host" + (n + 1); sec.innerHTML = '<div class="container"><article class="poster reveal"></article></div>'; prev.after(sec); }
+      $(".poster", sec).innerHTML = '<div class="poster__frame" aria-hidden="true"></div>' + arch(H, "arch arch--poster", "фото ведущего") +
+        '<div class="poster__body">' + (H.eyebrow ? '<p class="eyebrow eyebrow--gold">' + esc(H.eyebrow) + '</p>' : "") + '<p class="poster__kicker">' + esc(H.kicker) + '</p>' +
+        '<h2 class="poster__name">' + esc(H.name).replace(" ", "<br>") + '</h2>' + (H.role ? '<p class="poster__role">' + esc(H.role) + '</p>' : '') +
+        ([].concat(H.description || []).length ? '<div class="poster__text">' + [].concat(H.description || []).map(function (t) { return '<p>' + esc(t) + '</p>'; }).join('') + '</div>' : "") +
+        (H.footnote ? '<p class="eyebrow eyebrow--gold">' + esc(H.footnote) + "</p>" : "") + "</div>";
+      prev = sec;
+    });
+  })();
+
+  /* ---- Чередование фонов: первый экран светлый, дальше блоки идут красный – светлый – красный…
+          Скрытые блоки пропускаются, поэтому порядок не ломается, если убрать или добавить блок. ---- */
+  (function () {
+    var red = true;
+    $$("#main > section.section").forEach(function (s) {
+      if (s.hidden) return;
+      s.classList.toggle("section--red", red); s.classList.toggle("section--ivory", !red); red = !red;
+    });
+    var f = $(".footer"); if (f) f.classList.toggle("footer--edge", !red);     // последний блок красный – подвал отделяется линией
+  })();
 
   /* ---- Локация: кнопки маршрута и изображение «Как добраться» (появляется, когда в данных задан venue.scheme) ---- */
   (function () {
@@ -267,7 +286,7 @@
       "  return (1. - pow(max(1. - w, 0.), 1.6)) * (.78 + .22 * hash(floor(j))) + .07 * sin(12.566 * j + 1.3) + .03 * sin(18.85 * j + 4.1);",
       "}",
       "vec3 velvet(float t) {",                       // бархат: тень в складке → красный → блик на гребне
-      "  vec3 dark = vec3(.17, .008, .016), mid = vec3(.60, .035, .05), hi = vec3(.93, .19, .16);",
+      "  vec3 dark = vec3(.19, .0, .0), mid = vec3(.686, .0, .0), hi = vec3(.90, .15, .12);",
       "  vec3 c = mix(dark, mid, clamp(t / .55, 0., 1.));",
       "  return mix(c, hi, clamp((t - .55) / .45, 0., 1.));",
       "}",
@@ -426,7 +445,7 @@
         // каждая складка – столбик из M трапеций со своим градиентом, чтобы объём шёл за изгибом ткани
         for (j = 0; j < N; j++) for (m = 0; m < M; m++) {
           var xa = (E[j][m] + E[j][m + 1]) / 2, xb = (E[j + 1][m] + E[j + 1][m + 1]) / 2, g = ctx.createLinearGradient(xa, 0, Math.max(xb, xa + .5), 0);
-          g.addColorStop(0, "#3a0306"); g.addColorStop(.28, "#99090d"); g.addColorStop(.5, "#e22b28"); g.addColorStop(.72, "#99090d"); g.addColorStop(1, "#330205");
+          g.addColorStop(0, "#3d0000"); g.addColorStop(.28, "#AF0000"); g.addColorStop(.5, "#d2372d"); g.addColorStop(.72, "#AF0000"); g.addColorStop(1, "#360000");
           ctx.beginPath(); ctx.moveTo(E[j][m], H * m / M); ctx.lineTo(E[j + 1][m] + .6, H * m / M);
           ctx.lineTo(E[j + 1][m + 1] + .6, H * (m + 1) / M + .6); ctx.lineTo(E[j][m + 1], H * (m + 1) / M + .6);
           ctx.closePath(); ctx.fillStyle = g; ctx.fill();
@@ -488,12 +507,12 @@
         c.clearRect(0, 0, r.width, r.height);
         if (T > 2) { burstCv.width = burstCv.width; return; }
         var mix = Math.max(0, Math.min(1, (T - .3) / .85)), fade = T < 1.4 ? 1 : Math.max(0, 1 - (T - 1.4) / .45);
-        var R = Math.round(230 + 14 * mix), G = Math.round(199 - 199 * mix), B = Math.round(110 - 101 * mix), drag = Math.pow(.925, dt);   // золото → красный Coca-Cola
+        var R = Math.round(230 - 55 * mix), G = Math.round(199 - 199 * mix), B = Math.round(110 - 110 * mix), drag = Math.pow(.925, dt);   // золото → красный #AF0000
         for (i = 0; i < F.length; i++) {
           var f = F[i]; if (T > f.life) continue; var al = (1 - T / f.life) * .8;
           f.vx *= drag; f.vy = f.vy * drag + (f.bubble ? -.05 : .16) * dt; f.x += f.vx * dt; f.y += f.vy * dt;
           if (f.bubble) { c.beginPath(); c.arc(f.x, f.y, f.r, 0, 6.28); c.strokeStyle = "rgba(201,162,39," + al.toFixed(3) + ")"; c.lineWidth = 1.2; c.stroke(); }
-          else { c.beginPath(); c.moveTo(f.x, f.y); c.lineTo(f.x - f.vx * 2.4, f.y - f.vy * 2.4); c.strokeStyle = "rgba(244,0,9," + (al * .8).toFixed(3) + ")"; c.lineWidth = 1.6; c.stroke(); }
+          else { c.beginPath(); c.moveTo(f.x, f.y); c.lineTo(f.x - f.vx * 2.4, f.y - f.vy * 2.4); c.strokeStyle = "rgba(175,0,0," + (al * .8).toFixed(3) + ")"; c.lineWidth = 1.6; c.stroke(); }
         }
         if (T < 1.5) {
           cap.vy += .5 * dt; cap.vx *= Math.pow(.99, dt); cap.x += cap.vx * dt; cap.y += cap.vy * dt; cap.a += cap.va * dt;
