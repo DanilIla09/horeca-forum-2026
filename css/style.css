@@ -1,11 +1,10 @@
 /* Coca-Cola HoReCa Forum 2026 – стили.
-   Шрифт: фирменная Helvetica от организаторов (Regular + Bold, файлы в assets/fonts, латиница + кириллица) – на всём сайте.
+   Шрифт: Montserrat на всём сайте (решение заказчика 24.11), начертания 400 и 700, подключается с Google Fonts в index.html и menu.html.
+   Прежняя Helvetica от организаторов лежит в assets/fonts и не используется.
    woff2 для современных браузеров, woff – запасной формат. Если файл шрифта у гостя не загрузится, Windows подставит Arial, а macOS/iOS – системную Helvetica.
    Начертаний два, поэтому жирность только 400 и 700. Заголовок целиком одной жирности.
    Цвет (комментарий клиента 18.11): красный вместо бордо (с 24.11 – единый #AF0000); айвори для текстовых блоков, золото – тонкие линии.
    На красном мелкий текст белый (золотой на ярком красном плохо читается), светлое золото – для линий и крупных цифр. */
-@font-face { font-family: 'HF Helvetica'; src: url("../assets/fonts/helvetica-regular.woff2") format("woff2"), url("../assets/fonts/helvetica-regular.woff") format("woff"); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: 'HF Helvetica'; src: url("../assets/fonts/helvetica-bold.woff2") format("woff2"), url("../assets/fonts/helvetica-bold.woff") format("woff"); font-weight: 700; font-style: normal; font-display: swap; }
 :root {
   /* Красный на сайте один: #AF0000 (решение заказчика 24.11). Имена переменных прежние, значение общее. */
   --red: #AF0000; --red-deep: #AF0000; --red-dark: #AF0000; --red-text: #AF0000;
@@ -14,8 +13,8 @@
   /* фоны блоков чередуются (решение заказчика 24.11): слоновая кость – тёмно-красный – слоновая кость … */
   --cream: #FDF9E9; --red-block: #AF0000;
   --ink: #1C1C1C; --ink-muted: #4A443B;
-  --font-display: 'HF Helvetica', Helvetica, 'Helvetica Neue', Arial, sans-serif;
-  --font-text: 'HF Helvetica', Helvetica, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Montserrat', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-text: 'Montserrat', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --container: 1200px; --gutter: clamp(16px, 4vw, 48px); --section-y: clamp(56px, 8vw, 112px);
   --nav-h: 64px; --radius: 2px; --radius-arch: 999px 999px 2px 2px; --line-gold: 1px solid var(--gold);
   --ease-curtain: cubic-bezier(.7, 0, .2, 1); --ease: cubic-bezier(.22, .61, .36, 1); --dur-curtain: 1.4s; --dur-hover: .2s;

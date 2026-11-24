@@ -8,7 +8,8 @@ body = html.split("<!--PAGE-START-->")[1].split("<!--PAGE-END-->")[0]
 title = re.search(r"<title>(.*?)</title>", html).group(1)
 desc = re.search(r'<meta name="description" content="([^"]*)"', html).group(1)
 css = (root / "css/style.css").read_text(encoding="utf-8")
-# на claude.ai сторонние шрифты грузятся только встроенными: woff2 → data URI
+# Шрифт Montserrat подключается ссылкой на Google Fonts (на claude.ai это разрешённый источник стилей).
+# Встраивание woff2 ниже срабатывает, только если в CSS есть свои @font-face с файлами из assets/fonts.
 def _inline_font(m):
     data = base64.b64encode((root / "assets/fonts" / m.group(1)).read_bytes()).decode()
     return f'url("data:font/woff2;base64,{data}")'
@@ -20,6 +21,7 @@ js = (root / "js/app.js").read_text(encoding="utf-8")
 out = f"""<title>{title}</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="{desc}">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap">
 <link rel="icon" href="assets/logo/favicon.png" type="image/png">
 <style>
 {css}
@@ -44,6 +46,7 @@ menu_out = f"""<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Банкетное меню</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap">
 <link rel="icon" href="assets/logo/favicon.png" type="image/png">
 <style>
 {css}
