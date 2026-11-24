@@ -70,7 +70,7 @@ window.EVENT_DATA = {
       { name: "Тарлан Усейнов", role: "IMX директор", company: "The Coca-Cola Company", topic: "«Новая медиасреда»", photo: "assets/speakers/useinov.jpg", bio: "IMX директор, The Coca-Cola Company. Тема: «Новая медиасреда»." },
       { name: "Анель Баймуратова", role: "Менеджер канала HoReCa", company: "CCI Kazakhstan", topic: "«Обзор стратегии брендов CCI и возможности развития партнёрства»", photo: "assets/speakers/baimuratova.jpg", bio: "Менеджер канала HoReCa, CCI Kazakhstan. Тема: «Обзор стратегии брендов CCI и возможности развития партнёрства»." },
       { name: "Дмитрий Казанцев", role: "Налоговый эксперт", company: "", topic: "", topicNote: "Тема уточняется", photo: "assets/speakers/kazantsev.jpg", bio: "Налоговый эксперт. Тема выступления уточняется." },
-      { name: "Ахмет Кюршад Эртин", role: "Генеральный директор", company: "Coca-Cola İçecek", topic: "", topicNote: "Тема уточняется", photo: "assets/speakers/ertin.jpg", bio: "Генеральный директор Coca-Cola İçecek. Тема выступления уточняется." },
+      { name: "Ахмет Кюршад Эртин", role: "Генеральный директор", company: "Coca-Cola İçecek", topic: "Приветственное слово Генерального директора Coca-Cola İçecek", photo: "assets/speakers/ertin.jpg", bio: "Генеральный директор Coca-Cola İçecek. Выступит с приветственным словом." },
       { name: "Гурген Басенцян", role: "Основатель", company: "Good Project Family", topic: "Клиентский кейс", photo: "assets/speakers/basentsyan.jpg", bio: "Основатель Good Project Family. Выступит с клиентским кейсом." }
     ]
   },
