@@ -288,6 +288,8 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 /* строка без времени: продолжение предыдущего пункта (второй выступающий в том же слоте) */
 .tl--cont { padding-top: 0; margin-top: -10px; }
 .tl__body .h3 { font-size: clamp(17px, 1.9vw, 20px); }
+/* под именем: должность и компания (вторая строка), ниже тема (третья строка) */
+.tl__role { font-size: 15px; color: var(--ink); line-height: 1.4; }
 .tl__meta { font-size: 13px; color: var(--ink-muted); line-height: 1.5; }
 @media (max-width: 560px) {
   .timeline::before { left: 73px; }

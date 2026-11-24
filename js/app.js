@@ -105,7 +105,7 @@
     var li = doc.createElement("li"); li.className = "tl" + (p.isBreak ? " tl--break" : "") + (p.time ? "" : " tl--cont"); li.style.setProperty("--i", i);
     li.innerHTML = (p.time ? '<time class="tl__time"><b>' + esc(p.time) + '</b>' + (p.end ? '<span>–' + esc(p.end) + '</span>' : '') + '</time><span class="tl__dot" aria-hidden="true"></span>' : '<span></span><span></span>') +
       '<div class="tl__body">' + (p.label ? '<p class="eyebrow ' + (p.isBreak ? "eyebrow--badge" : "eyebrow--text") + '">' + esc(p.label) + '</p>' : "") +
-      '<h3 class="h3">' + esc(p.title) + '</h3>' + (p.meta ? '<p class="tl__meta">' + esc(p.meta) + '</p>' : "") + "</div>";
+      '<h3 class="h3">' + esc(p.title) + '</h3>' + (p.role ? '<p class="tl__role">' + esc(p.role) + '</p>' : "") + (p.meta ? '<p class="tl__meta">' + esc(p.meta) + '</p>' : "") + "</div>";
     tl.appendChild(li);
   });
 
