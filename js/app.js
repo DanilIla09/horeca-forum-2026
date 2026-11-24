@@ -154,7 +154,8 @@
     hosts.forEach(function (H, n) {
       var sec = first;
       if (n) { sec = doc.createElement("section"); sec.className = "section"; sec.id = "host" + (n + 1); sec.innerHTML = '<div class="container"><article class="poster reveal"></article></div>'; prev.after(sec); }
-      $(".poster", sec).innerHTML = '<div class="poster__frame" aria-hidden="true"></div>' + arch(H, "arch arch--poster", "фото ведущего") +
+      $(".poster", sec).classList.toggle("poster--wide", !!H.photoWide);
+      $(".poster", sec).innerHTML = '<div class="poster__frame" aria-hidden="true"></div>' + arch(H, "arch arch--poster" + (H.photoWide ? " arch--wide" : ""), "фото") +
         '<div class="poster__body">' + (H.eyebrow ? '<p class="eyebrow eyebrow--gold">' + esc(H.eyebrow) + '</p>' : "") + '<p class="poster__kicker">' + esc(H.kicker) + '</p>' +
         '<h2 class="poster__name">' + esc(H.name).replace(" ", "<br>") + '</h2>' + (H.role ? '<p class="poster__role">' + esc(H.role) + '</p>' : '') +
         ([].concat(H.description || []).length ? '<div class="poster__text">' + [].concat(H.description || []).map(function (t) { return '<p>' + esc(t) + '</p>'; }).join('') + '</div>' : "") +
