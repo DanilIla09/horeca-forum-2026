@@ -2,12 +2,12 @@
 
 Источники (скачать в один каталог под этими именами):
   dominos.svg      https://commons.wikimedia.org/wiki/File:Domino's_pizza_logo.svg
-  tccc.svg         https://commons.wikimedia.org/wiki/File:The_Coca-Cola_Company_logo.svg
+  cocacola.svg     https://commons.wikimedia.org/wiki/File:Coca-Cola_logo.svg  (для The Coca-Cola Company: обычный логотип узнаётся быстрее надписи с «Company»)
   cci.png          https://en.wikipedia.org/wiki/File:Coca-Cola_İçecek_logo.png
   goodproject.svg  https://goodproject.kz/wp-content/uploads/2022/09/logo.svg  (на сайте он белый – перекрашен в тёмный)
 CCI Kazakhstan берётся готовый: assets/logo/cci-color.png.
 
-Красные логотипы Coca-Cola (CCI, The Coca-Cola Company) перекрашены в красный сайта #AF0000 – как и остальные логотипы на странице.
+Красные логотипы Coca-Cola (CCI, Coca-Cola) перекрашены в красный сайта #AF0000 – как и остальные логотипы на странице.
 SVG растрируются через headless Chrome. Нужен Pillow.
 
 Запуск: python -I make_logos.py <каталог с исходниками> <рабочий каталог> <assets/companies>
@@ -54,7 +54,7 @@ def mono(im, color):
 
 res = {
     "dominos": fit(raster("dominos")),
-    "tccc": fit(mono(raster("tccc"), RED)),
+    "cocacola": fit(mono(raster("cocacola"), RED)),
     "goodproject": fit(mono(raster("goodproject"), INK)),
     "cci": fit(mono(Image.open(src / "cci.png").convert("RGBA"), RED)),      # в исходнике фон уже прозрачный
 }
