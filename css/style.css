@@ -24,7 +24,7 @@
 .nav, .section--red, .poster, .menupage, .footer { --gold: var(--gold-light); --line-gold: 1px solid var(--gold-light); }
 .speaker, .menucard, .modal__card, .venue__map, .scheme__open { --gold: #C9A227; --line-gold: 1px solid #C9A227; }
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; scrollbar-gutter: stable; }   /* место под полосу прокрутки занято всегда: страница не дёргается, когда вступление запирает прокрутку */
 body { margin: 0; font-family: var(--font-text); font-size: 16px; line-height: 1.65; color: var(--ink); background: var(--ivory); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
 html.curtain-closed, body.modal-open, body.nav-open { overflow: hidden; }
 button, input, select, textarea { font-family: inherit; }

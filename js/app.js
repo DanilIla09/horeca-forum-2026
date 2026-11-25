@@ -428,9 +428,13 @@
       drapes.getContext("2d").drawImage(stat.cv, 0, 0);
       stat.cv.width = stat.cv.height = 1;      // большой буфер больше не нужен: картинка уже в #drapes
     }
+    /* Холст вступления лежит ровно поверх первого экрана и имеет его размеры (первый экран бывает выше окна).
+       Тогда шторы вступления совпадают с неподвижными шторами под ними пиксель в пиксель, и в конце ничего не «подменяется». */
     function sizeCurtain() {
       if (!gl && !ctx && !(gl = makeGL(cv))) ctx = cv.getContext("2d");
-      cdpr = Math.min(window.devicePixelRatio || 1, gl ? 2 : 1.5); cw = window.innerWidth; ch = window.innerHeight;
+      cdpr = Math.min(window.devicePixelRatio || 1, gl ? 2 : 1.5); cw = hero.clientWidth || window.innerWidth; ch = hero.clientHeight || window.innerHeight;
+      var hr = hero.getBoundingClientRect();
+      cv.style.left = hr.left + "px"; cv.style.top = hr.top + "px"; cv.style.width = cw + "px"; cv.style.height = ch + "px";
       cv.width = Math.round(cw * cdpr); cv.height = Math.round(ch * cdpr);
       if (gl) gl.fit = null; else ctx.setTransform(cdpr, 0, 0, cdpr, 0, 0);
     }
@@ -590,6 +594,7 @@
 
     var drapesTimer = 0;
     drawDrapes(); window.addEventListener("load", drawDrapes);
+    if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(drawDrapes);     // шрифт меняет высоту блоков, а шторы подогнаны под них
     window.addEventListener("resize", function () { clearTimeout(drapesTimer); drapesTimer = setTimeout(drawDrapes, 150); });
     // первый экран сразу в готовом виде: занавес открывает уже собранную сцену
     logo.classList.add("is-final"); if (ring) ring.rest(); showRest();
@@ -605,6 +610,7 @@
       if (introDone) return;
       var t = (((now || performance.now()) - start) / SLOW - T_OPEN) / 1000;
       if (!isNaN(FIXT)) { drawCurtain(FIXT); requestAnimationFrame(loop); return; }   // отладка: ?intro=1&ct=0.8 – занавес стоит на 0,8-й секунде раскрытия
+      if (hero.clientWidth !== cw || hero.clientHeight !== ch) { sizeCurtain(); drawDrapes(); }   // вёрстка изменилась (догрузился шрифт): оба слоя пересчитываются вместе
       drawCurtain(t);
       if (t > T_END) { introDone = true; unbind(); hideCurtain(true); return; }     // полотна ушли: слой вступления гаснет, под ним те же шторы первого экрана
       requestAnimationFrame(loop);
