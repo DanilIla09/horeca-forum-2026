@@ -292,8 +292,9 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .speaker__id .h3 { overflow-wrap: break-word; }
 .speaker__note { color: var(--ink-muted); }
 /* логотип компании вместо названия: вписывается в рамку 150×36, прижат влево; пропорции у логотипов разные (от квадрата до длинной надписи) */
-.speaker__logo { display: block; height: 36px; width: auto; max-width: min(150px, 100%); object-fit: contain; object-position: left center; margin-top: 4px; }
-.speaker__logo--lg { height: 46px; max-width: min(210px, 100%); margin-top: 2px; }
+/* 48 px, а не 36: на экранах обычной плотности (1 точка на пиксель) мелкие детали логотипов иначе слипаются */
+.speaker__logo { display: block; height: 48px; width: auto; max-width: min(170px, 100%); object-fit: contain; object-position: left center; margin-top: 4px; }
+.speaker__logo--lg { height: 58px; max-width: min(230px, 100%); margin-top: 2px; }
 .speaker { position: relative; text-align: left; background: var(--ivory); color: var(--ink); border: 0; border-radius: var(--radius); padding: 22px 22px 20px; font: inherit; cursor: pointer; display: grid; gap: 16px; align-content: start; transition: box-shadow .3s; overflow: hidden; }
 .speaker:hover, .speaker:focus-visible { box-shadow: 0 18px 40px rgba(0,0,0,.35); }
 .speaker__top { display: flex; gap: 18px; align-items: flex-start; }
