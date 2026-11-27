@@ -4,6 +4,7 @@
   dominos.svg   https://commons.wikimedia.org/wiki/File:Domino's_pizza_logo.svg  – скачать в каталог исходников
   The Coca-Cola Company – файл клиента KO-LOGO-_Black.png (прислан 27.11 в «Правках по сайту»), лежит рядом: tools/companies/src/.
                 Логотип чёрный, клиент просил НЕ перекрашивать.
+  ABR – файл заказчика abr.png (27.11), тоже в tools/companies/src/. Он белый, на светлой карточке не виден – перекрашен в тёмный #1a1a1a.
 CCI Kazakhstan берётся готовый: assets/logo/cci-color.png.
 
 SVG растрируются через headless Chrome. Нужен Pillow.
@@ -35,6 +36,13 @@ def raster(name):
     return Image.open(shot).convert("RGBA")
 
 
+def mono(im, color):
+    """Одноцветный логотип: форма из прозрачности, цвет – заданный."""
+    flat = Image.new("RGBA", im.size, color + (255,))
+    flat.putalpha(im.getchannel("A"))
+    return flat
+
+
 def fit(im):
     box = im.getchannel("A").point(lambda a: 255 if a > 8 else 0).getbbox()
     im = im.crop(box) if box else im
@@ -45,6 +53,7 @@ def fit(im):
 res = {
     "dominos": fit(raster("dominos")),
     "tccc": fit(Image.open(own / "KO-LOGO-_Black.png").convert("RGBA")),
+    "abr": fit(mono(Image.open(own / "abr.png").convert("RGBA"), (26, 26, 26))),
 }
 for name, im in res.items():
     im.save(out / (name + ".png"), optimize=True)

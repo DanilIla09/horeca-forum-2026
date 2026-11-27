@@ -113,7 +113,7 @@
     var li = doc.createElement("li"); li.className = "tl" + (p.isBreak ? " tl--break" : "") + (p.time ? "" : " tl--cont"); li.style.setProperty("--i", i);
     li.innerHTML = (p.time ? '<time class="tl__time"><b>' + esc(p.time) + '</b>' + (p.end ? '<span>–' + esc(p.end) + '</span>' : '') + '</time><span class="tl__dot" aria-hidden="true"></span>' : '<span></span><span></span>') +
       '<div class="tl__body">' + (p.label ? '<p class="eyebrow ' + (p.isBreak ? "eyebrow--badge" : "eyebrow--text") + '">' + esc(p.label) + '</p>' : "") +
-      '<h3 class="h3">' + esc(p.title) + '</h3>' + (p.role ? '<p class="tl__role">' + esc(p.role) + '</p>' : "") + (p.meta ? '<p class="tl__meta">' + esc(p.meta) + '</p>' : "") + "</div>";
+      '<h3 class="h3">' + esc(p.title).replace(/№ /g, "№&nbsp;") + '</h3>' + (p.role ? '<p class="tl__role">' + esc(p.role) + '</p>' : "") + (p.meta ? '<p class="tl__meta">' + esc(p.meta) + '</p>' : "") + "</div>";
     tl.appendChild(li);
   });
 
@@ -123,7 +123,7 @@
   var arch = function (sp, cls, caption) {
     return sp.photo
       ? '<div class="' + cls + '"><img src="' + esc(withVer(sp.photo)) + '" alt="' + esc(sp.name) + '" loading="lazy"></div>'
-      : '<div class="' + cls + ' arch--empty"><b>' + esc(sp.initials || initials(sp.name)) + '</b><span class="eyebrow">' + esc(caption || "фото") + "</span></div>";
+      : '<div class="' + cls + ' arch--empty"><b>' + esc(sp.initials || initials(sp.name)) + '</b><span class="eyebrow">' + esc(caption == null ? "фото" : caption) + "</span></div>";
   };
   // компания спикера: логотип, если он задан в данных, иначе название текстом
   var companyMark = function (sp, cls) {
@@ -133,19 +133,23 @@
   grid.classList.add("speakers--n" + (D.speakers.items || []).length);     // по числу карточек CSS подбирает раскладку (для семи – 2+3+2)
   (D.speakers.items || []).forEach(function (sp, i) {
     var b = doc.createElement("button"); b.type = "button"; b.className = "speaker"; b.style.setProperty("--i", i);
-    b.innerHTML = '<div class="speaker__top">' + arch(sp, "arch") + '<div class="speaker__id"><h3 class="h3">' + esc(sp.name) + '</h3>' +
+    var topic = sp.topic || sp.topicNote || "";            // пусто – блока темы на карточке нет
+    b.innerHTML = '<div class="speaker__top">' + arch(sp, "arch", "") + '<div class="speaker__id"><h3 class="h3">' + esc(sp.name) + '</h3>' +
       (sp.role ? '<p class="speaker__role">' + esc(sp.role) + '</p>' : '') + (sp.company ? '<p class="eyebrow eyebrow--company">' + companyMark(sp, "speaker__logo") + '</p>' : '') + '</div></div>' +
-      '<div class="speaker__topic"><p' + (sp.topic ? '' : ' class="speaker__note"') + '>' + esc(sp.topic || sp.topicNote || 'Тема уточняется') + '</p></div><span class="speaker__more">' + esc(T("Подробнее")) + ' →</span>';
+      (topic ? '<div class="speaker__topic"><p' + (sp.topic ? '' : ' class="speaker__note"') + '>' + esc(topic) + '</p></div>' : '') + '<span class="speaker__more">' + esc(T("Подробнее")) + ' →</span>';
     b.addEventListener("click", function () { openModal(sp); });
     grid.appendChild(b);
   });
   var lastFocus = null;
   function openModal(sp) {
     lastFocus = doc.activeElement;
-    $("#modalPhoto").innerHTML = arch(sp, "arch arch--lg");
+    $("#modalPhoto").innerHTML = arch(sp, "arch arch--lg", "");
     $("#modalName").textContent = sp.name || ""; $("#modalRole").textContent = sp.role || ""; $("#modalCompany").innerHTML = companyMark(sp, "speaker__logo speaker__logo--lg");
     $("#modalRole").hidden = !sp.role; $("#modalCompany").hidden = !sp.company;
-    $("#modalTopic").textContent = sp.topic || sp.topicNote || "Тема уточняется"; $("#modalWhen").textContent = sp.stage || ""; $("#modalWhen").hidden = !sp.stage;       // время выступления не показываем (просьба заказчика), только зал, если задан
+    var topic = sp.topic || sp.topicNote || "";            // нет темы и нет текста – в окне остаются фото, имя, должность и логотип
+    $("#modalTopic").textContent = topic; $("#modalTopic").hidden = $("#modalTopicLabel").hidden = !topic;
+    $("#modalRule1").hidden = !topic && !sp.bio; $("#modalRule2").hidden = !topic || !sp.bio; $("#modalBio").hidden = !sp.bio;
+    $("#modalWhen").textContent = sp.stage || ""; $("#modalWhen").hidden = !sp.stage;       // время выступления не показываем (просьба заказчика), только зал, если задан
     $("#modalBio").textContent = sp.bio || "";
     modal.hidden = false; doc.body.classList.add("modal-open");
     void modal.offsetWidth;        // браузер должен увидеть закрытое состояние, иначе окно появится без движения
