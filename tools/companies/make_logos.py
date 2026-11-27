@@ -1,13 +1,11 @@
 """Логотипы компаний спикеров для карточек → assets/companies/*.png (прозрачный фон, высота до 200 px).
 
-Источники (скачать в один каталог под этими именами):
-  dominos.svg      https://commons.wikimedia.org/wiki/File:Domino's_pizza_logo.svg
-  cocacola.svg     https://commons.wikimedia.org/wiki/File:Coca-Cola_logo.svg  (для The Coca-Cola Company: обычный логотип узнаётся быстрее надписи с «Company»)
-  cci.png          https://en.wikipedia.org/wiki/File:Coca-Cola_İçecek_logo.png
-  goodproject.svg  https://goodproject.kz/wp-content/uploads/2022/09/logo.svg  (на сайте он белый – перекрашен в тёмный)
+Источники:
+  dominos.svg   https://commons.wikimedia.org/wiki/File:Domino's_pizza_logo.svg  – скачать в каталог исходников
+  The Coca-Cola Company – файл клиента KO-LOGO-_Black.png (прислан 27.11 в «Правках по сайту»), лежит рядом: tools/companies/src/.
+                Логотип чёрный, клиент просил НЕ перекрашивать.
 CCI Kazakhstan берётся готовый: assets/logo/cci-color.png.
 
-Красные логотипы Coca-Cola (CCI, Coca-Cola) перекрашены в красный сайта #AF0000 – как и остальные логотипы на странице.
 SVG растрируются через headless Chrome. Нужен Pillow.
 
 Запуск: python -I make_logos.py <каталог с исходниками> <рабочий каталог> <assets/companies>
@@ -19,12 +17,11 @@ from pathlib import Path
 from PIL import Image
 
 src, work, out = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3])
+own = Path(__file__).resolve().parent / "src"
 work.mkdir(parents=True, exist_ok=True)
 out.mkdir(parents=True, exist_ok=True)
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 H = 200
-RED = (175, 0, 0)      # #AF0000
-INK = (26, 26, 26)
 
 
 def raster(name):
@@ -45,18 +42,9 @@ def fit(im):
     return im.resize((round(w * H / h), H), Image.LANCZOS) if h > H else im
 
 
-def mono(im, color):
-    """Одноцветный логотип: форма из прозрачности, цвет – заданный."""
-    flat = Image.new("RGBA", im.size, color + (255,))
-    flat.putalpha(im.getchannel("A"))
-    return flat
-
-
 res = {
     "dominos": fit(raster("dominos")),
-    "cocacola": fit(mono(raster("cocacola"), RED)),
-    "goodproject": fit(mono(raster("goodproject"), INK)),
-    "cci": fit(mono(Image.open(src / "cci.png").convert("RGBA"), RED)),      # в исходнике фон уже прозрачный
+    "tccc": fit(Image.open(own / "KO-LOGO-_Black.png").convert("RGBA")),
 }
 for name, im in res.items():
     im.save(out / (name + ".png"), optimize=True)

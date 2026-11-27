@@ -45,7 +45,7 @@ menu_out = f"""<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Банкетное меню</title>
+<title>Меню обеда</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap">
 <link rel="icon" href="assets/logo/favicon.png" type="image/png">
 <style>

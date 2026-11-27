@@ -94,7 +94,11 @@
   })();
 
   /* ---- О форуме ---- */
-  $("#aboutLead").innerHTML = esc(D.about.lead).replace(/\{([^}]+)\}/g, "<strong>$1</strong>");
+  // [logo] в тексте – логотип форума на месте названия: белый на красном фоне блока, красный на светлом (переключает CSS)
+  var leadLogo = '<span class="lead__logo" role="img" aria-label="' + esc(D.title || "") + '">' +
+    '<img class="lead__logo-w" src="' + esc(withVer("assets/logo/horeca-forum-2026-white-h.png")) + '" alt="" width="1100" height="314">' +
+    '<img class="lead__logo-r" src="' + esc(withVer("assets/logo/horeca-forum-2026-red-h.png")) + '" alt="" width="1100" height="314"></span>';
+  $("#aboutLead").innerHTML = esc(D.about.lead).replace(/\{([^}]+)\}/g, "<strong>$1</strong>").replace("[logo]", leadLogo);
   $("#aboutText").hidden = !(D.about.paragraphs || []).length;
   var at = $("#aboutText"); (D.about.paragraphs || []).forEach(function (p) { var el = doc.createElement("p"); el.textContent = p; at.appendChild(el); });
   var pl = $("#pillars"); pl.hidden = !(D.about.pillars || []).length; (D.about.pillars || []).forEach(function (p, i) {
@@ -125,6 +129,7 @@
     if (!sp.company) return "";
     return sp.logo ? '<img class="' + cls + '" src="' + esc(withVer(sp.logo)) + '" alt="' + esc(sp.company) + '" loading="lazy">' : esc(sp.company);
   };
+  grid.classList.add("speakers--n" + (D.speakers.items || []).length);     // по числу карточек CSS подбирает раскладку (для семи – 2+3+2)
   (D.speakers.items || []).forEach(function (sp, i) {
     var b = doc.createElement("button"); b.type = "button"; b.className = "speaker"; b.style.setProperty("--i", i);
     b.innerHTML = '<div class="speaker__top">' + arch(sp, "arch") + '<div class="speaker__id"><h3 class="h3">' + esc(sp.name) + '</h3>' +

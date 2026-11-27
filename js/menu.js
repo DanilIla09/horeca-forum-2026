@@ -1,16 +1,20 @@
-/* Страница «Банкетное меню». Данные: data/event.js (window.EVENT_DATA.menu). */
+/* Страница «Меню обеда». Данные: data/event.js (window.EVENT_DATA.menu). */
 (function () {
   "use strict";
   var D = window.EVENT_DATA || {}, M = D.menu || {}, doc = document;
   var set = function (id, text) { var el = doc.getElementById(id); if (el) el.textContent = text || ""; };
-  set("menuEyebrow", M.eyebrow); set("menuTitle", M.title || "Банкетное меню");
+  set("menuEyebrow", M.eyebrow); set("menuTitle", M.title || "Меню обеда");
   set("copyright", (D.footer || {}).copyright); set("orgLabel", (D.footer || {}).organizerLabel);
   var list = doc.getElementById("menuList");
   (M.categories || []).forEach(function (c) {
     var sec = doc.createElement("section"); sec.className = "menucat";
     var h = doc.createElement("h2"); h.className = "menucat__title"; h.textContent = c.category; sec.appendChild(h);
     var ul = doc.createElement("ul");
-    (c.items || []).forEach(function (it) { var li = doc.createElement("li"); li.textContent = typeof it === "string" ? it : it.name; ul.appendChild(li); });
+    (c.items || []).forEach(function (it) {
+      var li = doc.createElement("li"), name = doc.createElement("p"); name.className = "menucat__dish"; name.textContent = typeof it === "string" ? it : it.name; li.appendChild(name);
+      if (it && it.allergens) { var al = doc.createElement("p"); al.className = "menucat__allergens"; al.textContent = it.allergens; li.appendChild(al); }   // строка «Аллергены: …» под названием блюда
+      ul.appendChild(li);
+    });
     sec.appendChild(ul); list.appendChild(sec);
   });
 })();
