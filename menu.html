@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&amp;display=swap">
-  <link rel="stylesheet" href="css/style.css?v=20261127e">
+  <link rel="stylesheet" href="css/style.css?v=20261127h">
 </head>
 <body>
 <!--MENU-START-->
@@ -19,7 +19,8 @@
       <a class="nav__brand" href="index.html" aria-label="Coca-Cola HoReCa Forum 2026 – на главную">
         <img src="assets/logo/horeca-forum-2026-white-h.png" alt="" width="1100" height="314">
       </a>
-      <a class="nav__back" href="index.html#menu">← На главную</a>
+      <div class="lang" role="group" aria-label="Язык сайта / Сайт тілі"><button type="button" data-lang="ru">RU</button><button type="button" data-lang="kz">KZ</button></div>
+      <a class="nav__back" href="index.html#menu" data-i18n>← На главную</a>
     </div>
   </header>
 
@@ -34,7 +35,7 @@
           <div class="divider divider--center" aria-hidden="true"><i></i><b>◆</b><i></i></div>
         </header>
         <div class="menulist" id="menuList"></div>
-        <div class="menupage__back"><a class="btn btn--dark" href="index.html#menu">Вернуться на главную</a></div>
+        <div class="menupage__back"><a class="btn btn--dark" href="index.html#menu" data-i18n>Вернуться на главную</a></div>
       </article>
     </div>
   </main>
@@ -50,7 +51,9 @@
     <div class="container"><p class="footer__copy" id="copyright"></p></div>
   </footer>
 <!--MENU-END-->
-  <script src="data/event.js?v=20261127e"></script>
-  <script src="js/menu.js?v=20261127e"></script>
+  <script src="data/event.js?v=20261127h"></script>
+  <script src="data/event.kz.js?v=20261127h"></script>
+  <script src="js/lang.js?v=20261127h"></script>
+  <script src="js/menu.js?v=20261127h"></script>
 </body>
 </html>

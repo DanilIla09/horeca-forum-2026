@@ -2,6 +2,7 @@
 (function () {
   "use strict";
   var D = window.EVENT_DATA || {};
+  var T = window.T || function (s) { return s; };     // перевод строки интерфейса (js/lang.js); без него – русский
   var doc = document, root = doc.documentElement;
   var $ = function (s, r) { return (r || doc).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || doc).querySelectorAll(s)); };
@@ -134,7 +135,7 @@
     var b = doc.createElement("button"); b.type = "button"; b.className = "speaker"; b.style.setProperty("--i", i);
     b.innerHTML = '<div class="speaker__top">' + arch(sp, "arch") + '<div class="speaker__id"><h3 class="h3">' + esc(sp.name) + '</h3>' +
       (sp.role ? '<p class="speaker__role">' + esc(sp.role) + '</p>' : '') + (sp.company ? '<p class="eyebrow eyebrow--company">' + companyMark(sp, "speaker__logo") + '</p>' : '') + '</div></div>' +
-      '<div class="speaker__topic"><p' + (sp.topic ? '' : ' class="speaker__note"') + '>' + esc(sp.topic || sp.topicNote || 'Тема уточняется') + '</p></div><span class="speaker__more">Подробнее →</span>';
+      '<div class="speaker__topic"><p' + (sp.topic ? '' : ' class="speaker__note"') + '>' + esc(sp.topic || sp.topicNote || 'Тема уточняется') + '</p></div><span class="speaker__more">' + esc(T("Подробнее")) + ' →</span>';
     b.addEventListener("click", function () { openModal(sp); });
     grid.appendChild(b);
   });

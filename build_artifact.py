@@ -17,6 +17,8 @@ css = re.sub(r', url\("\.\./assets/fonts/[^"]+\.woff"\) format\("woff"\)', "", c
 css = re.sub(r'url\("\.\./assets/fonts/([^"]+)"\)', _inline_font, css)
 css = css.replace('url("../assets/', 'url("assets/')   # CSS встраивается в страницу: пути считаются от неё
 data = (root / "data/event.js").read_text(encoding="utf-8")
+# казахский словарь и выбор языка идут сразу за данными, до основного скрипта
+data += "\n</script>\n<script>\n" + (root / "data/event.kz.js").read_text(encoding="utf-8") + "\n</script>\n<script>\n" + (root / "js/lang.js").read_text(encoding="utf-8")
 js = (root / "js/app.js").read_text(encoding="utf-8")
 out = f"""<title>{title}</title>
 <meta name="claude:viewport-fit-sides" content="cover">

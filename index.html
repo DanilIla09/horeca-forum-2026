@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&amp;display=swap">
-  <link rel="stylesheet" href="css/style.css?v=20261127e">
+  <link rel="stylesheet" href="css/style.css?v=20261127h">
 </head>
 <body>
 <!--PAGE-START-->
@@ -30,15 +30,16 @@
         <img src="assets/logo/horeca-forum-2026-white-h.png" alt="" width="1100" height="314">
       </a>
       <nav class="nav__list" id="navlist" aria-label="Разделы">
-        <a href="#home" data-nav>Главная</a>
-        <a href="#about" data-nav>О форуме</a>
-        <a href="#program" data-nav>Программа</a>
-        <a href="#speakers" data-nav>Спикеры</a>
-        <a href="#host" data-nav>Ведущий</a>
-        <a href="#menu" data-nav>Меню</a>
-        <a href="#venue" data-nav>Локация</a>
+        <a href="#home" data-nav data-i18n>Главная</a>
+        <a href="#about" data-nav data-i18n>О форуме</a>
+        <a href="#program" data-nav data-i18n>Программа</a>
+        <a href="#speakers" data-nav data-i18n>Спикеры</a>
+        <a href="#host" data-nav data-i18n>Ведущий</a>
+        <a href="#menu" data-nav data-i18n>Меню</a>
+        <a href="#venue" data-nav data-i18n>Локация</a>
         <p class="nav__meta" id="navMeta"></p>
       </nav>
+      <div class="lang" role="group" aria-label="Язык сайта / Сайт тілі"><button type="button" data-lang="ru">RU</button><button type="button" data-lang="kz">KZ</button></div>
       <button class="nav__burger" id="burger" aria-label="Открыть меню" aria-expanded="false" aria-controls="navlist">
         <span></span><span></span><span></span>
       </button>
@@ -67,21 +68,21 @@
         </div>
         <h1 class="hero__title reveal" id="heroTitle"></h1>
         <dl class="facts reveal">
-          <div class="facts__cell"><dt>Дата</dt><dd data-field="dateText"></dd></div>
-          <div class="facts__cell"><dt>Время</dt><dd data-field="timeText"></dd></div>
-          <div class="facts__cell"><dt>Место</dt><dd data-field="venueShort"></dd></div>
+          <div class="facts__cell"><dt data-i18n>Дата</dt><dd data-field="dateText"></dd></div>
+          <div class="facts__cell"><dt data-i18n>Время</dt><dd data-field="timeText"></dd></div>
+          <div class="facts__cell"><dt data-i18n>Место</dt><dd data-field="venueShort"></dd></div>
         </dl>
         <div class="countdown reveal" id="countdown" aria-live="polite" aria-atomic="true">
-          <p class="eyebrow countdown__eyebrow" id="countdownLabel">До поднятия занавеса</p>
+          <p class="eyebrow countdown__eyebrow" id="countdownLabel" data-i18n>До поднятия занавеса</p>
           <div class="countdown__grid">
-            <div class="countdown__cell"><b data-cd="d">00</b><span>дней</span></div>
-            <div class="countdown__cell"><b data-cd="h">00</b><span>часов</span></div>
-            <div class="countdown__cell"><b data-cd="m">00</b><span>минут</span></div>
-            <div class="countdown__cell"><b data-cd="s">00</b><span>секунд</span></div>
+            <div class="countdown__cell"><b data-cd="d">00</b><span data-i18n>Дней</span></div>
+            <div class="countdown__cell"><b data-cd="h">00</b><span data-i18n>Часов</span></div>
+            <div class="countdown__cell"><b data-cd="m">00</b><span data-i18n>Минут</span></div>
+            <div class="countdown__cell"><b data-cd="s">00</b><span data-i18n>Секунд</span></div>
           </div>
-          <p class="countdown__note" id="countdownNote">по времени Алматы (UTC+5)</p>
+          <p class="countdown__note" id="countdownNote" data-i18n>по времени Алматы (UTC+5)</p>
         </div>
-        <a class="btn btn--outline reveal" href="#program" data-nav>Смотреть программу</a>
+        <a class="btn btn--outline reveal" href="#program" data-nav data-i18n>Смотреть программу</a>
       </div>
     </section>
 
@@ -90,7 +91,7 @@
       <div class="container about">
         <div class="about__head reveal">
           <p class="eyebrow eyebrow--gold" id="aboutEyebrow"></p>
-          <h2 class="h2 h2--light">О форуме</h2>
+          <h2 class="h2 h2--light" data-i18n>О форуме</h2>
           <div class="divider divider--left" aria-hidden="true"><i></i><b>◆</b></div>
         </div>
         <div class="about__body reveal">
@@ -106,7 +107,7 @@
       <div class="container container--narrow">
         <header class="section__head reveal">
           <p class="eyebrow eyebrow--text" id="programEyebrow"></p>
-          <h2 class="h2">Программа форума</h2>
+          <h2 class="h2" data-i18n>Программа форума</h2>
         </header>
         <ol class="timeline reveal reveal--stagger" id="timeline"></ol>
       </div>
@@ -117,7 +118,7 @@
       <div class="container">
         <header class="section__head reveal">
           <p class="eyebrow eyebrow--gold" id="speakersEyebrow"></p>
-          <h2 class="h2 h2--light">Спикеры</h2>
+          <h2 class="h2 h2--light" data-i18n>Спикеры</h2>
           <p class="section__sub section__sub--light" id="speakersSub"></p>
         </header>
         <div class="speakers reveal reveal--stagger" id="speakersGrid"></div>
@@ -138,11 +139,11 @@
         <article class="menucard menucard--teaser reveal">
           <header class="section__head">
             <p class="eyebrow eyebrow--text" id="menuEyebrow"></p>
-            <h2 class="h2">Меню</h2>
+            <h2 class="h2" data-i18n>Меню</h2>
             <div class="divider divider--center" aria-hidden="true"><i></i><b>◆</b><i></i></div>
           </header>
           <p class="menucard__teaser" id="menuTeaser"></p>
-          <a class="btn btn--dark" href="menu.html">Посмотреть меню</a>
+          <a class="btn btn--dark" href="menu.html" data-i18n>Посмотреть меню</a>
         </article>
       </div>
     </section>
@@ -152,11 +153,11 @@
       <div class="container venue">
         <div class="venue__info reveal">
           <p class="eyebrow eyebrow--text" id="venueEyebrow"></p>
-          <h2 class="h2 h2--left">Место проведения</h2>
+          <h2 class="h2 h2--left" data-i18n>Место проведения</h2>
           <dl class="venue__rows">
-            <div><dt>Площадка</dt><dd class="venue__name" data-field="venue.name"></dd></div>
-            <div><dt>Адрес</dt><dd data-field="venue.address"></dd></div>
-            <div><dt>Дата и время</dt><dd><span data-field="dateLong"></span> · <span data-field="timeText"></span></dd></div>
+            <div><dt data-i18n>Площадка</dt><dd class="venue__name" data-field="venue.name"></dd></div>
+            <div><dt data-i18n>Адрес</dt><dd data-field="venue.address"></dd></div>
+            <div><dt data-i18n>Дата и время</dt><dd><span data-field="dateLong"></span> · <span data-field="timeText"></span></dd></div>
           </dl>
           <div class="venue__actions">
             <a class="btn btn--gold" id="route2gis" href="#" target="_blank" rel="noopener">2GIS</a>
@@ -193,12 +194,12 @@
       <button class="modal__close" data-close aria-label="Закрыть">×</button>
       <div class="modal__photo" id="modalPhoto"></div>
       <div class="modal__body">
-        <p class="eyebrow eyebrow--text">Спикер</p>
+        <p class="eyebrow eyebrow--text" data-i18n>Спикер</p>
         <h3 class="modal__name" id="modalName"></h3>
         <p class="modal__role" id="modalRole"></p>
         <p class="eyebrow eyebrow--company" id="modalCompany"></p>
         <hr class="rule">
-        <p class="eyebrow eyebrow--red">Тема выступления</p>
+        <p class="eyebrow eyebrow--red" data-i18n>Тема выступления</p>
         <p class="modal__topic" id="modalTopic"></p>
         <p class="eyebrow eyebrow--muted" id="modalWhen"></p>
         <hr class="rule">
@@ -211,7 +212,9 @@
     <img id="lightboxImg" alt="Как добраться до площадки форума">
   </div>
 <!--PAGE-END-->
-  <script src="data/event.js?v=20261127e"></script>
-  <script src="js/app.js?v=20261127e"></script>
+  <script src="data/event.js?v=20261127h"></script>
+  <script src="data/event.kz.js?v=20261127h"></script>
+  <script src="js/lang.js?v=20261127h"></script>
+  <script src="js/app.js?v=20261127h"></script>
 </body>
 </html>

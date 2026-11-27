@@ -103,9 +103,30 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .nav__list a:hover, .nav__list a.is-active { opacity: 1; color: var(--gold-light); }
 .nav__list a:hover::after, .nav__list a.is-active::after { transform: scaleX(1); }
 .nav__meta { display: none; }
+/* Переключатель языка RU / KZ */
+.nav__list { margin-left: auto; }
+.lang { display: inline-flex; flex: none; border: 1px solid var(--gold); border-radius: var(--radius); overflow: hidden; }
+.lang button { font: 700 11px/1 var(--font-text); letter-spacing: .12em; color: #fff; background: transparent; border: 0; padding: 0 11px; min-height: 34px; cursor: pointer; opacity: .85; transition: background var(--dur-hover), opacity var(--dur-hover); }
+.lang button + button { border-left: 1px solid var(--gold); }
+.lang button:hover { opacity: 1; background: rgba(255,255,255,.14); }
+.lang button.is-active { background: var(--gold-light); color: var(--red-deep); opacity: 1; cursor: default; }
+.nav__brand { flex: none; }
+@media (min-width: 1121px) {
+  .nav__list a { white-space: nowrap; }
+  html[lang="kk"] .nav__list { gap: clamp(12px, 1.5vw, 22px); }          /* казахские названия разделов длиннее русских */
+  html[lang="kk"] .nav__list a { letter-spacing: .12em; }
+}
+@media (max-width: 1120px) { .lang { margin-left: auto; } .lang button { min-height: 40px; padding: 0 12px; } .nav__inner { gap: 12px; } }
+@media (max-width: 480px) {     /* страница меню на телефоне: логотип, переключатель и «На главную» в одну строку */
+  .nav__back { padding: 0 10px; letter-spacing: .06em; }
+  .nav__brand + .lang button { padding: 0 9px; }
+  .nav__inner:has(.nav__back) .nav__brand img { height: 28px; }
+}
+@media (max-width: 359px) { .nav__back { font-size: 10px; padding: 0 8px; letter-spacing: .02em; } .nav__inner:has(.nav__back) .nav__brand img { height: 22px; } .nav__inner:has(.nav__back) { gap: 8px; } }
+.nav__brand + .lang { margin-left: auto; }     /* страница меню: переключатель и «На главную» прижаты вправо */
 .nav__burger { display: none; width: 44px; height: 44px; border: 1px solid var(--gold); background: transparent; border-radius: var(--radius); cursor: pointer; flex-direction: column; justify-content: center; align-items: center; gap: 5px; padding: 0; }
 .nav__burger span { display: block; width: 18px; height: 2px; background: var(--gold-light); transition: transform .3s var(--ease), opacity .2s; }
-@media (max-width: 880px) {
+@media (max-width: 1120px) {
   .nav__burger { display: flex; }
   .nav__list { position: fixed; top: calc(var(--nav-h) + env(safe-area-inset-top, 0px)); left: 0; right: 0; bottom: 0; flex-direction: column; align-items: stretch; gap: 0; background: var(--red-deep); padding: 8px max(var(--gutter), env(safe-area-inset-left, 0px)) 32px; overflow: auto;
     transform: translateY(-12px); opacity: 0; visibility: hidden; transition: transform .35s var(--ease), opacity .3s, visibility .35s; }
