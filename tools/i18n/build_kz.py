@@ -5,6 +5,7 @@
   2. horeca_forum_kz_menu_prompt.md       – утверждённый заказчиком казахский текст страницы меню (разделы, блюда, строки «Аллерген: …»);
   3. horeca_forum_final_edits_prompt.md   – финальные правки (27.11 вечер): новое время, новый спикер, правки текстов.
      По финальным правкам в казахском меню 11 блюд, как в русском: две строки файла меню с пометкой «нет в RU» не используются.
+  4. kz_overrides.md                      – точечные правки казахского текста из переписки с заказчиком.
 
 Казахский текст берётся из файлов как есть, вручную ничего не перепечатывается и не переводится.
 Сайт остаётся на русских данных (data/event.js и разметка); при выборе KZ скрипт js/lang.js подменяет каждую строку,
@@ -19,7 +20,7 @@ import re
 
 here = pathlib.Path(__file__).resolve().parent
 root = here.parent.parent
-SOURCES = ["horeca_forum_kz_prompt.md", "horeca_forum_kz_menu_prompt.md", "horeca_forum_final_edits_prompt.md"]
+SOURCES = ["horeca_forum_kz_prompt.md", "horeca_forum_kz_menu_prompt.md", "horeca_forum_final_edits_prompt.md", "kz_overrides.md"]
 SKIP = {"пусто", "нет", "—", "-"}          # «значения нет» в таблицах правок
 
 pairs = {}
