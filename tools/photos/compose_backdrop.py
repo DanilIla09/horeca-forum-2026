@@ -2,7 +2,7 @@
 Вырезки людей (PNG с прозрачностью) делают дизайнеры заказчика; кадр – как на прежних фото: лицо ≈ 38–43% ширины кадра.
 
 python -I compose_backdrop.py <папка с вырезками> <assets/speakers> <превью.jpg> [#RRGGBB]
-Имена вырезок: alimkulova.png, baimuratova.png, dinchel.png, gomech.png, kazantsev.png, useinov.png, yilmaz.png.
+Имена вырезок: alimkulova.png, baimuratova.png, beisekeeva.png, dinchel.png, gomech.png, kazantsev.png, useinov.png, yilmaz.png.
 Нужны pillow и numpy.
 """
 import os
@@ -23,6 +23,7 @@ PEOPLE = {
     "useinov":     ((171 / 1254, 0.0, 940 / 1254), (600, 800)),
     "baimuratova": ((.287, .123, .523), (600, 800)),
     "kazantsev":   ((173 / 1333, 275 / 2000, 910 / 1333), (600, 800)),
+    "beisekeeva":  ((.199, 0.0, .56), (600, 800)),            # исходник горизонтальный: кадр на всю высоту вырезки
 }
 
 os.makedirs(out_dir, exist_ok=True)
