@@ -129,6 +129,19 @@ for ru, kz in list(pairs.items()):
 # ссылка «← На главную» на странице меню – берём перевод слова «Главная» из шапки.
 put("← На главную", "← " + pairs["Главная"])
 
+# Замены по всему казахскому тексту (указание заказчика 27.11, 23:50: «Құттықтау сөз поменять на Алғы сөз абсолютно везде»).
+# Меняется только основа, окончания остаются как были: «құттықтау сөзі» → «алғы сөзі».
+REPLACE_KZ = [("Құттықтау сөз", "Алғы сөз"), ("құттықтау сөз", "алғы сөз")]
+replaced = 0
+for ru in list(pairs):
+    new = pairs[ru]
+    for a, b in REPLACE_KZ:
+        new = new.replace(a, b)
+    if new != pairs[ru]:
+        pairs[ru] = new
+        replaced += 1
+print("строк с заменой «Құттықтау сөз» → «Алғы сөз»:", replaced)
+
 same = [ru for ru, kz in pairs.items() if ru == kz]
 body = json.dumps(pairs, ensure_ascii=False, indent=2)
 (root / "data/event.kz.js").write_text(
