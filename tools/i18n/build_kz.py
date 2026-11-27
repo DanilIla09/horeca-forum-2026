@@ -2,7 +2,9 @@
 
 Источники читаются по порядку, более поздний файл главнее раннего:
   1. horeca_forum_kz_prompt.md            – полный перевод сайта (27.11);
-  2. horeca_forum_final_edits_prompt.md   – финальные правки (27.11 вечер): новое время, новый спикер, правки текстов.
+  2. horeca_forum_kz_menu_prompt.md       – утверждённый заказчиком казахский текст страницы меню (разделы, блюда, строки «Аллерген: …»);
+  3. horeca_forum_final_edits_prompt.md   – финальные правки (27.11 вечер): новое время, новый спикер, правки текстов.
+     По финальным правкам в казахском меню 11 блюд, как в русском: две строки файла меню с пометкой «нет в RU» не используются.
 
 Казахский текст берётся из файлов как есть, вручную ничего не перепечатывается и не переводится.
 Сайт остаётся на русских данных (data/event.js и разметка); при выборе KZ скрипт js/lang.js подменяет каждую строку,
@@ -17,10 +19,12 @@ import re
 
 here = pathlib.Path(__file__).resolve().parent
 root = here.parent.parent
-SOURCES = ["horeca_forum_kz_prompt.md", "horeca_forum_final_edits_prompt.md"]
+SOURCES = ["horeca_forum_kz_prompt.md", "horeca_forum_kz_menu_prompt.md", "horeca_forum_final_edits_prompt.md"]
 SKIP = {"пусто", "нет", "—", "-"}          # «значения нет» в таблицах правок
 
 pairs = {}
+dish_allergens = {}        # русское блюдо → русская строка аллергенов (из первого файла): по ней находим пару для казахской строки аллергенов
+skipped = []
 
 
 def norm(s):
@@ -63,7 +67,28 @@ for name in SOURCES:
     for header, rows in tables((here / name).read_text(encoding="utf-8")):
         ru_cols = [i for i, h in enumerate(header) if h.startswith("RU")]
         kz_cols = [i for i, h in enumerate(header) if h.startswith("KZ")]
-        if ru_cols and len(ru_cols) == len(kz_cols):
+        if "RU (для сопоставления)" in header:
+            # таблица блюд из файла меню: русское название дано для поиска блюда (иногда обрезано многоточием), перевода аллергенов на русский в ней нет
+            r, kd, ka = header.index("RU (для сопоставления)"), header.index("KZ блюдо"), header.index("KZ строка аллергенов")
+            for cells in rows:
+                cells = cells + [""] * (len(header) - len(cells))
+                if norm(cells[r]) == "нет в RU":
+                    skipped.append(norm(cells[kd]))
+                    continue
+                key = norm(cells[r]).rstrip("…")
+                hit = [d for d in dish_allergens if d.startswith(key)]
+                assert len(hit) == 1, (cells[r], hit)
+                add(hit[0], cells[kd])
+                if norm(cells[ka]):
+                    assert dish_allergens[hit[0]], hit[0]
+                    add(dish_allergens[hit[0]], cells[ka])
+                else:
+                    assert not dish_allergens[hit[0]], hit[0]
+        elif ru_cols and len(ru_cols) == len(kz_cols):
+            if len(ru_cols) == 2 and "аллерген" in header[ru_cols[1]].lower():
+                for cells in rows:
+                    cells = cells + [""] * (len(header) - len(cells))
+                    dish_allergens[norm(cells[ru_cols[0]])] = norm(cells[ru_cols[1]])
             for cells in rows:
                 for r, k in zip(ru_cols, kz_cols):
                     if r < len(cells) and k < len(cells):
@@ -111,3 +136,4 @@ body = json.dumps(pairs, ensure_ascii=False, indent=2)
     "   Одинаковые в RU и KZ строки (имена, «Десерт») оставлены нарочно: по ним сверка видит, что строка учтена. */\n"
     "window.EVENT_KZ = " + body + ";\n", encoding="utf-8")
 print("пар в словаре:", len(pairs), "| из них одинаковых в RU и KZ:", len(same))
+print("блюда файла меню без русской пары (не используются):", skipped)
